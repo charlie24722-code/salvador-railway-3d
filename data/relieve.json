@@ -1,0 +1,13 @@
+{
+  "zoom": 12,
+  "tileX": 1023,
+  "tileY": 1885,
+  "stride": 2,
+  "width": 1664,
+  "height": 1152,
+  "pixelCenter": 0.5,
+  "format": "signed int16 little endian, meters",
+  "sampleSpacingAt14N_m": 74.2,
+  "source": "Mapzen Terrain Tiles (SRTM, consultar atribucion)",
+  "accessed": "2026-10-15"
+}

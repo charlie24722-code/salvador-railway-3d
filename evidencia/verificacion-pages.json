@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-15",
+  "url": "http://127.0.0.1:8766/salvador-railway-3d/?v=7",
+  "checks": {
+    "subdirectoryReady": true,
+    "historicalCityFilterCount": 29,
+    "departmentPolygonCount": 14,
+    "departmentLabelPointCount": 14,
+    "citySourceLinks": true,
+    "jsonValidation": true,
+    "javascriptSyntax": true,
+    "manualDragObserved": true
+  },
+  "notes": "Validación local con navegador integrado y verificación de archivos. No equivale a despliegue remoto. Captura exportada desde el visor; límites terrestres Natural Earth. Rótulos sujetos a colisión y zoom."
+}

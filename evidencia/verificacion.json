@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-15",
+  "engine": "Chromium / SwiftShader, prueba funcional; no mide GPU del usuario",
+  "checks": [
+    "Carga y WebGL sin Internet",
+    "Una sola capa DEM y resolución 1× en pantalla Retina",
+    "Cambio de ruta y perfil",
+    "Búsqueda y ficha de volcán",
+    "Cambio 2D/3D",
+    "Carga de curvas bajo demanda",
+    "Resolución fluida regulable",
+    "Original histórico y ampliación",
+    "Fuentes y precisión",
+    "Pantalla móvil sin desbordamiento horizontal"
+  ],
+  "stats": {
+    "terrain": {
+      "source": "dem",
+      "exaggeration": 1.5
+    },
+    "pixelRatio": 1,
+    "cssWidth": 1058,
+    "canvasWidth": 1058,
+    "points": 49,
+    "sources": [
+      "tintas",
+      "dem",
+      "hydro",
+      "contours",
+      "osm",
+      "historic",
+      "selected-route",
+      "station-points",
+      "natural-points",
+      "place-points",
+      "selection",
+      "measure"
+    ],
+    "elevationSantaAna": 2217.6907895330983,
+    "resources": 65
+  },
+  "errors": [],
+  "failed": []
+}
