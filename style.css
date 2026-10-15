@@ -22,10 +22,23 @@
 .profile-restore-pill .pill-icon{font-size:14px}
 .profile-restore-pill .pill-arrow{font-size:9px;color:#6a7f69}
 
-/* Locomotora y tren auténticos (sin cajas translúcidas) */
-.route-point{width:28px;height:72px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;pointer-events:none}
+/* Locomotora y tren auténticos en 3D volumétrico */
+.route-point{width:34px;height:148px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;pointer-events:none;transform-style:preserve-3d!important}
 .route-point:after{display:none!important}
-.route-point img{width:28px;height:72px;display:block;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(10,18,14,.55))}
+.route-point img{display:none}
+
+.sr-train-3d{position:relative;width:34px;height:148px;transform-style:preserve-3d;transform:scale(var(--train-scale,1));transform-origin:center center;pointer-events:none}
+.sr-train-shadow{position:absolute;left:-5px;top:-7px;width:44px;height:162px;background:radial-gradient(ellipse at center,rgba(10,16,12,.72) 0%,rgba(10,16,12,.28) 60%,transparent 80%);filter:blur(3px);transform:translateZ(0px);pointer-events:none}
+
+/* Bocanadas de vapor animadas en 3D sobre la chimenea */
+@keyframes srSteamPuff{
+  0%{transform:translateZ(20px) translateY(0) scale(.6);opacity:.85}
+  50%{transform:translateZ(30px) translateY(-14px) scale(1);opacity:.55}
+  100%{transform:translateZ(44px) translateY(-32px) scale(1.6);opacity:0}
+}
+.sr-puff-1{animation:srSteamPuff 2s infinite ease-out}
+.sr-puff-2{animation:srSteamPuff 2s infinite ease-out .65s}
+.sr-puff-3{animation:srSteamPuff 2s infinite ease-out 1.3s}
 
 .train-controls{display:flex;align-items:center;gap:16px;font-size:9px;margin-top:7px;color:#5c7369}
 .train-controls label{display:flex;align-items:center;gap:5px}

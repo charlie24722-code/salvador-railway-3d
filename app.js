@@ -164,7 +164,11 @@ function setRouteDistance(d){
  return s;
 }
 function profileAtIndex(i){return setRouteDistance(routeCum.at(-1)*Math.max(0,Math.min(420,i))/420);}
-function centerRoutePoint(){stopMotion();const s=setRouteDistance(routeDistance);map.easeTo({center:s.p,zoom:Math.max(12.5,map.getZoom()),offset:[0,-Math.min(130,$('profile').clientHeight/2)],duration:700});}
+function centerRoutePoint(){
+ stopMotion();const s=setRouteDistance(routeDistance);const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(routeCum.at(-1),s.d+35)).p;const heading=Math.atan2((look[0]-s.p[0])*Math.cos(s.p[1]*Math.PI/180),look[1]-s.p[1])*180/Math.PI;
+ const pEl=$('profile'),hasP=pEl&&getComputedStyle(pEl).display!=='none',offY=hasP?-Math.round(Math.min(185,pEl.clientHeight*.75)):-60;
+ map.easeTo({center:s.p,bearing:heading-24,zoom:Math.max(15.5,map.getZoom()),pitch:62,offset:[0,offY],duration:800});
+}
 function selectRoute(id,fly=false){
  const r=routes.features.find(r=>r.properties.id===id);if(!r)return;
  stopMotion();state.route=id;map.getSource('selected-route').setData(featureCollection(segments.features.filter(f=>f.properties.routeId===id)));$('profileTitle').textContent=r.properties.name;
@@ -192,15 +196,23 @@ function trainStep(time){
  const turn=((heading-trainHeading+540)%360)-180;
  trainHeading+=turn*(1-Math.exp(-dt/.8));profileMarker.setRotation(trainHeading);
  $('trainStatus').textContent=`En marcha · ${fmt(state.trainSpeed,1)}×`;
- if(state.followTrain)map.jumpTo({center:s.p,bearing:trainHeading,zoom:13,pitch:60,offset:[0,-Math.min(130,$('profile').clientHeight/2)]});
+ const pEl=$('profile'),hasP=pEl&&getComputedStyle(pEl).display!=='none',offY=hasP?-Math.round(Math.min(185,pEl.clientHeight*.75)):-60;
+ if(state.followTrain)map.jumpTo({center:s.p,bearing:map.getBearing(),zoom:map.getZoom(),pitch:map.getPitch(),offset:[0,offY]});
  if(s.d>=total){stopTour();$('trainStatus').textContent='Llegada al final de la ruta';return;}
  trainFrame=requestAnimationFrame(trainStep);
 }
 function startTrain(){
  stopOrbit();if(routeDistance>=routeCum.at(-1)-1)setRouteDistance(0);
- state.tour=true;$('trainStatus').textContent='Preparando recorrido…';trainLastTime=0;trainHeading=map.getBearing();$('tourButton').textContent='Ⅱ Pausar recorrido';$('tourButton').setAttribute('aria-pressed','true');
- if(state.followTrain){const s=setRouteDistance(routeDistance);map.easeTo({center:s.p,zoom:13,pitch:60,offset:[0,-Math.min(130,$('profile').clientHeight/2)],duration:1100});tourTimer=setTimeout(()=>{if(state.tour)trainFrame=requestAnimationFrame(trainStep);},1150);}
- else trainFrame=requestAnimationFrame(trainStep);
+ state.tour=true;$('trainStatus').textContent='Preparando recorrido…';trainLastTime=0;$('tourButton').textContent='Ⅱ Pausar recorrido';$('tourButton').setAttribute('aria-pressed','true');
+ if(state.followTrain){
+  const s=setRouteDistance(routeDistance);const startZoom=Math.max(15,map.getZoom());
+  const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(routeCum.at(-1),s.d+35)).p;
+  const heading=Math.atan2((look[0]-s.p[0])*Math.cos(s.p[1]*Math.PI/180),look[1]-s.p[1])*180/Math.PI;
+  trainHeading=heading;
+  const pEl=$('profile'),hasP=pEl&&getComputedStyle(pEl).display!=='none',offY=hasP?-Math.round(Math.min(185,pEl.clientHeight*.75)):-60;
+  map.easeTo({center:s.p,bearing:heading-24,zoom:startZoom,pitch:62,offset:[0,offY],duration:1100});
+  tourTimer=setTimeout(()=>{if(state.tour)trainFrame=requestAnimationFrame(trainStep);},1150);
+ }else trainFrame=requestAnimationFrame(trainStep);
 }
 function startOrbit(t){if(!state.orbit)return;if(lastOrbitTime){map.jumpTo({bearing:map.getBearing()+Math.min(t-lastOrbitTime,100)*.0035});}lastOrbitTime=t;orbitFrame=requestAnimationFrame(startOrbit);}
 function setBase(base){
@@ -262,13 +274,121 @@ function bindEvents(){
  if(hit.length){const id=hit[0].properties.routeId;if(id!==state.route)selectRoute(id);else stopMotion();const s=RouteGeometry.project([e.lngLat.lng,e.lngLat.lat],routeCoords,routeCum);setRouteDistance(s.d);tourIndex=Math.round(s.d/routeCum.at(-1)*420);return;}
  const hs=map.queryRenderedFeatures(e.point,{layers:['water','rivers']});if(hs[0]?.properties.name)new maplibregl.Popup().setLngLat(e.lngLat).setText(hs[0].properties.name+' · OpenStreetMap').addTo(map);}});
  let lastPointerRead=0;map.on('mousemove',e=>{const now=performance.now();if(now-lastPointerRead<100)return;lastPointerRead=now;$('coordinates').textContent=`${fmt(e.lngLat.lat,4)}° N · ${fmt(Math.abs(e.lngLat.lng),4)}° O`;const h=elevationAt([e.lngLat.lng,e.lngLat.lat]);$('elevation').textContent=h==null?'Fuera de la rejilla de consulta':`Suelo DEM: ≈ ${fmt(h)} m s. n. m.`;});
- $('snapshot').onclick=()=>{notify('Preparando captura…',0);map.once('render',()=>{try{notify('Generando imagen…',0);const canvas=document.createElement('canvas'),src=map.getCanvas();canvas.width=src.width;canvas.height=src.height+105;const ctx=canvas.getContext('2d');ctx.drawImage(src,0,0);if(state.layers.rail){const mr=profileMarker.getElement().getBoundingClientRect(),cr=src.getBoundingClientRect(),scale=src.width/cr.width;const img=profileMarker.getElement().querySelector('img');if(img.complete&&img.naturalWidth){ctx.save();ctx.translate((mr.x+mr.width/2-cr.x)*scale,(mr.y+mr.height/2-cr.y)*scale);ctx.rotate((profileMarker.getRotation()-map.getBearing())*Math.PI/180);ctx.drawImage(img,-14*scale,-36*scale,28*scale,72*scale);ctx.restore();}}ctx.fillStyle='#f5f2e9';ctx.fillRect(0,src.height,canvas.width,105);ctx.fillStyle='#243d36';ctx.font='22px Georgia';ctx.fillText('Salvador Railway · Atlas del relieve / 1911',18,src.height+29);ctx.font='12px sans-serif';ctx.fillText('Locomotora: '+fmt(routeDistance/1000,1)+' km · Rutas aproximadas · DEM moderno · Exageración '+state.exaggeration+'× · Base: '+state.base,18,src.height+51);ctx.fillText('Relieve: Mapzen / USGS / NASA · © OSM · Límites: geoBoundaries / OSM, CC BY-SA 2.0',18,src.height+71);ctx.fillText(state.base==='satellite'?'Imágenes © Esri y proveedores · Fuente histórica: P. F. Martin (1911), p. 198':'Martin (1911): mapa p. 198 y ciudades pp. 247–313 · Georreferencia: GeoNames CC BY 4.0',18,src.height+91);canvas.toBlob(blob=>{if(blob){$('notice').hidden=true;if(captureURL)URL.revokeObjectURL(captureURL);captureURL=URL.createObjectURL(blob);$('capturePreview').src=captureURL;$('captureDownload').href=captureURL;$('captureDialog').showModal();}else notify('No se pudo generar la captura.');});}catch(e){notify('No se pudo guardar la captura: '+e.message,0);}});map.triggerRepaint();};
- $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.map-shell').requestFullscreen();}catch{notify('Este navegador no permite pantalla completa; puedes ampliar la ventana.');}};
- document.addEventListener('fullscreenchange',()=>{map.resize();drawProfile();setRouteDistance(routeDistance);});
- for(const [button,dialog] of [['originalButton','originalDialog'],['sourcesButton','sourcesDialog'],['helpButton','helpDialog']])$(button).onclick=()=>$(dialog).showModal();
- document.querySelectorAll('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());document.querySelectorAll('dialog').forEach(d=>d.onclick=e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});
- let zoom=100;const imageZoom=d=>{zoom=Math.min(300,Math.max(100,zoom+d));$('originalImage').style.width=zoom+'%';$('imageZoom').textContent=zoom+'%';};$('imageIn').onclick=()=>imageZoom(25);$('imageOut').onclick=()=>imageZoom(-25);
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMotion();});addEventListener('resize',()=>{drawProfile();setRouteDistance(routeDistance);});addEventListener('offline',()=>{if(state.base!=='relief')setBase('relief');notify('Sin conexión. El relieve y las capas históricas locales siguen disponibles.');});
+ const snapshotTrainImg=new Image();snapshotTrainImg.src='assets/locomotora.svg';
+  $('snapshot').onclick=()=>{notify('Preparando captura…',0);map.once('render',()=>{try{notify('Generando imagen…',0);const canvas=document.createElement('canvas'),src=map.getCanvas();canvas.width=src.width;canvas.height=src.height+105;const ctx=canvas.getContext('2d');ctx.drawImage(src,0,0);if(state.layers.rail&&snapshotTrainImg.complete&&snapshotTrainImg.naturalWidth){const mr=profileMarker.getElement().getBoundingClientRect(),cr=src.getBoundingClientRect(),scale=src.width/cr.width;ctx.save();ctx.translate((mr.x+mr.width/2-cr.x)*scale,(mr.y+mr.height/2-cr.y)*scale);ctx.rotate((profileMarker.getRotation()-map.getBearing())*Math.PI/180);ctx.drawImage(snapshotTrainImg,-14*scale,-36*scale,28*scale,72*scale);ctx.restore();}ctx.fillStyle='#f5f2e9';ctx.fillRect(0,src.height,canvas.width,105);ctx.fillStyle='#243d36';ctx.font='22px Georgia';ctx.fillText('Salvador Railway · Atlas del relieve / 1911',18,src.height+29);ctx.font='12px sans-serif';ctx.fillText('Locomotora: '+fmt(routeDistance/1000,1)+' km · Rutas aproximadas · DEM moderno · Exageración '+state.exaggeration+'× · Base: '+state.base,18,src.height+51);ctx.fillText('Relieve: Mapzen / USGS / NASA · © OSM · Límites: geoBoundaries / OSM, CC BY-SA 2.0',18,src.height+71);ctx.fillText(state.base==='satellite'?'Imágenes © Esri y proveedores · Fuente histórica: P. F. Martin (1911), p. 198':'Martin (1911): mapa p. 198 y ciudades pp. 247–313 · Georreferencia: GeoNames CC BY 4.0',18,src.height+91);canvas.toBlob(blob=>{if(blob){$('notice').hidden=true;if(captureURL)URL.revokeObjectURL(captureURL);captureURL=URL.createObjectURL(blob);$('capturePreview').src=captureURL;$('captureDownload').href=captureURL;$('captureDialog').showModal();}else notify('No se pudo generar la captura.');});}catch(e){notify('No se pudo guardar la captura: '+e.message,0);}});map.triggerRepaint();};
+  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.map-shell').requestFullscreen();}catch{notify('Este navegador no permite pantalla completa; puedes ampliar la ventana.');}};
+  document.addEventListener('fullscreenchange',()=>{map.resize();drawProfile();setRouteDistance(routeDistance);});
+  for(const [button,dialog] of [['originalButton','originalDialog'],['sourcesButton','sourcesDialog'],['helpButton','helpDialog']])$(button).onclick=()=>$(dialog).showModal();
+  document.querySelectorAll('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());document.querySelectorAll('dialog').forEach(d=>d.onclick=e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});
+  let zoom=100;const imageZoom=d=>{zoom=Math.min(300,Math.max(100,zoom+d));$('originalImage').style.width=zoom+'%';$('imageZoom').textContent=zoom+'%';};$('imageIn').onclick=()=>imageZoom(25);$('imageOut').onclick=()=>imageZoom(-25);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMotion();});addEventListener('resize',()=>{drawProfile();setRouteDistance(routeDistance);});addEventListener('offline',()=>{if(state.base!=='relief')setBase('relief');notify('Sin conexión. El relieve y las capas históricas locales siguen disponibles.');});
+}
+
+function createTrain3DHTML(){
+ return `<div class="sr-train-3d" style="position:relative;width:34px;height:148px;transform-style:preserve-3d;">
+  <div class="sr-train-shadow"></div>
+  <div class="sr-loco" style="position:absolute;left:3px;top:0;width:28px;height:62px;transform-style:preserve-3d;">
+   <div style="position:absolute;inset:0;background:#141715;transform:translateZ(4px);border-radius:2px;box-shadow:0 0 4px #000;">
+    <div style="position:absolute;left:-3px;right:-3px;top:0;bottom:0;border-left:2px solid #5a5f5c;border-right:2px solid #5a5f5c;opacity:.6;"></div>
+   </div>
+   <div style="position:absolute;left:1px;top:-8px;width:26px;height:10px;transform-style:preserve-3d;transform:translateZ(4px);">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,#8a2018 0px,#8a2018 3px,#4d100b 5px);clip-path:polygon(50% 0%,100% 100%,0% 100%);box-shadow:0 -1px 2px rgba(0,0,0,.5);"></div>
+    <div style="position:absolute;left:11px;top:-3px;width:4px;height:5px;background:#2a2e2b;border-radius:1px;"></div>
+   </div>
+   <div style="position:absolute;left:9px;top:-5px;width:10px;height:9px;transform-style:preserve-3d;transform:translateZ(20px);">
+    <div style="position:absolute;inset:0;background:#d4af37;transform:translateZ(7px);border-radius:1px;border:1px solid #997819;"></div>
+    <div style="position:absolute;left:0;top:0;width:10px;height:7px;background:#fffde6;box-shadow:0 0 12px 3px rgba(255,238,150,.9),0 0 24px 6px rgba(255,215,80,.5);transform-origin:top;transform:rotateX(90deg);"></div>
+    <div style="position:absolute;left:-25px;top:-65px;width:60px;height:65px;background:linear-gradient(to top,rgba(255,245,170,.45) 0%,rgba(255,235,120,.15) 50%,transparent 100%);clip-path:polygon(38% 100%,62% 100%,100% 0%,0% 0%);pointer-events:none;transform:translateZ(-19px);"></div>
+   </div>
+   <div class="sr-boiler" style="position:absolute;left:4px;top:4px;width:20px;height:34px;transform-style:preserve-3d;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to right,#1b3026 0%,#2f4f3e 40%,#3e6852 60%,#1c3328 100%);transform:translateZ(18px);border-radius:4px;border:1px solid #1a2a22;box-shadow:inset 0 0 8px rgba(0,0,0,.6);display:flex;flex-direction:column;justify-content:space-evenly;padding:2px 0;">
+     <div style="height:2px;background:#e5c065;box-shadow:0 0 1px #fff;opacity:.95;"></div>
+     <div style="height:2px;background:#e5c065;box-shadow:0 0 1px #fff;opacity:.95;"></div>
+     <div style="height:2px;background:#e5c065;box-shadow:0 0 1px #fff;opacity:.95;"></div>
+    </div>
+    <div style="position:absolute;left:0;top:0;width:13px;height:34px;background:linear-gradient(to right,#0e1a14,#1b3026);transform-origin:left top;transform:rotateY(-90deg);"></div>
+    <div style="position:absolute;right:0;top:0;width:13px;height:34px;background:linear-gradient(to left,#12211a,#2f4f3e);transform-origin:right top;transform:rotateY(90deg);"></div>
+    <div style="position:absolute;left:0;top:0;width:20px;height:13px;background:#181c19;transform-origin:top;transform:rotateX(90deg);border-radius:50% 50% 0 0;border:1px solid #333;display:flex;align-items:center;justify-content:center;">
+     <div style="width:6px;height:6px;border-radius:50%;background:#555;border:1px solid #888;"></div>
+    </div>
+    <div style="position:absolute;left:7px;top:3px;width:6px;height:6px;transform-style:preserve-3d;transform:translateZ(18px);">
+     <div style="position:absolute;left:0;top:0;width:6px;height:16px;background:linear-gradient(to bottom,#111,#222);transform-origin:top center;transform:rotateX(90deg);"></div>
+     <div style="position:absolute;left:0;top:0;width:16px;height:6px;background:linear-gradient(to bottom,#0a0a0a,#1a1a1a);transform-origin:left center;transform:rotateY(-90deg);"></div>
+     <div style="position:absolute;inset:-1px;background:#d8aa35;border-radius:50%;transform:translateZ(16px);box-shadow:0 0 3px #ffeaa7;"></div>
+     <div class="sr-puff-1" style="position:absolute;left:-5px;top:-12px;width:16px;height:16px;background:radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(230,230,230,.6) 45%,transparent 75%);border-radius:50%;filter:blur(1px);"></div>
+     <div class="sr-puff-2" style="position:absolute;left:-9px;top:-26px;width:24px;height:24px;background:radial-gradient(circle,rgba(255,255,255,.75) 0%,rgba(220,220,220,.4) 50%,transparent 80%);border-radius:50%;filter:blur(2px);"></div>
+     <div class="sr-puff-3" style="position:absolute;left:-14px;top:-42px;width:32px;height:32px;background:radial-gradient(circle,rgba(255,255,255,.5) 0%,rgba(200,200,200,.2) 60%,transparent 85%);border-radius:50%;filter:blur(3px);"></div>
+    </div>
+    <div style="position:absolute;left:7px;top:15px;width:6px;height:6px;transform-style:preserve-3d;transform:translateZ(18px);">
+     <div style="position:absolute;inset:0;background:radial-gradient(circle at 35% 35%,#ffeaa7 0%,#d8aa35 60%,#8c6a18 100%);border-radius:50%;transform:translateZ(7px);box-shadow:0 0 2px rgba(0,0,0,.5);"></div>
+     <div style="position:absolute;left:0;top:0;width:6px;height:7px;background:#ab8424;transform-origin:top;transform:rotateX(90deg);"></div>
+    </div>
+    <div style="position:absolute;left:8px;top:23px;width:4px;height:4px;transform-style:preserve-3d;transform:translateZ(18px);">
+     <div style="position:absolute;inset:0;background:#ffeaa7;border-radius:50%;transform:translateZ(4px);"></div>
+    </div>
+    <div style="position:absolute;left:7px;top:29px;width:6px;height:6px;transform-style:preserve-3d;transform:translateZ(18px);">
+     <div style="position:absolute;inset:0;background:radial-gradient(circle at 35% 35%,#ffeaa7 0%,#d8aa35 60%,#8c6a18 100%);border-radius:50%;transform:translateZ(6px);"></div>
+     <div style="position:absolute;left:0;top:0;width:6px;height:6px;background:#ab8424;transform-origin:top;transform:rotateX(90deg);"></div>
+    </div>
+   </div>
+   <div class="sr-cab" style="position:absolute;left:2px;top:38px;width:24px;height:22px;transform-style:preserve-3d;">
+    <div style="position:absolute;left:0;top:0;width:20px;height:22px;background:linear-gradient(to right,#111e17,#1f3529);transform-origin:left top;transform:rotateY(-90deg);display:flex;align-items:center;justify-content:center;">
+     <div style="width:11px;height:10px;background:#bce3db;border:1px solid #14221b;opacity:.9;box-shadow:inset 0 0 3px rgba(0,0,0,.5);"></div>
+    </div>
+    <div style="position:absolute;right:0;top:0;width:20px;height:22px;background:linear-gradient(to left,#1b3026,#325240);transform-origin:right top;transform:rotateY(90deg);display:flex;align-items:center;justify-content:center;">
+     <div style="width:11px;height:10px;background:#bce3db;border:1px solid #14221b;opacity:.9;box-shadow:inset 0 0 3px rgba(0,0,0,.5);"></div>
+    </div>
+    <div style="position:absolute;left:0;top:0;width:24px;height:20px;background:#182b21;transform-origin:top;transform:rotateX(90deg);"></div>
+    <div style="position:absolute;left:0;bottom:0;width:24px;height:20px;background:#111e17;transform-origin:bottom;transform:rotateX(-90deg);display:flex;align-items:flex-end;justify-content:center;">
+     <div style="width:10px;height:14px;background:#050806;border:1px solid #22372c;"></div>
+    </div>
+    <div style="position:absolute;inset:-1px;background:linear-gradient(to right,#152019,#25382d 50%,#152019 100%);transform:translateZ(20px);border-radius:4px;border:1px solid #334d3f;box-shadow:0 0 4px rgba(0,0,0,.7);"></div>
+   </div>
+  </div>
+  <div class="sr-tender" style="position:absolute;left:3px;top:66px;width:28px;height:28px;transform-style:preserve-3d;">
+   <div style="position:absolute;inset:0;background:#111412;transform:translateZ(4px);border-radius:2px;"></div>
+   <div style="position:absolute;left:0;top:0;width:13px;height:28px;background:linear-gradient(to right,#111d17,#1b2f25);transform-origin:left top;transform:rotateY(-90deg);"></div>
+   <div style="position:absolute;right:0;top:0;width:13px;height:28px;background:linear-gradient(to left,#16261e,#2d4c3c);transform-origin:right top;transform:rotateY(90deg);"></div>
+   <div style="position:absolute;left:0;top:0;width:28px;height:13px;background:#16241d;transform-origin:top;transform:rotateX(90deg);"></div>
+   <div style="position:absolute;left:0;bottom:0;width:28px;height:13px;background:#101a14;transform-origin:bottom;transform:rotateX(-90deg);"></div>
+   <div style="position:absolute;inset:2px;background:#17231c;transform:translateZ(13px);border:1px solid #cda851;box-shadow:inset 0 0 4px #000;display:flex;align-items:center;justify-content:center;">
+    <div style="width:20px;height:18px;background:radial-gradient(ellipse at 40% 40%,#2a2a2a 0%,#111111 60%,#000000 100%);border-radius:35%;transform:translateZ(4px);box-shadow:0 0 3px #000;border:1px solid #333;"></div>
+   </div>
+  </div>
+  <div class="sr-coach" style="position:absolute;left:2px;top:98px;width:30px;height:48px;transform-style:preserve-3d;">
+   <div style="position:absolute;inset:0;background:#141414;transform:translateZ(4px);border-radius:2px;"></div>
+   <div style="position:absolute;left:0;right:0;top:0;height:4px;background:#2a1c12;transform:translateZ(5px);border-top:1px solid #734320;"></div>
+   <div style="position:absolute;left:0;right:0;bottom:0;height:4px;background:#2a1c12;transform:translateZ(5px);border-bottom:1px solid #734320;"></div>
+   <div style="position:absolute;left:0;top:4px;width:17px;height:40px;background:repeating-linear-gradient(to bottom,#6d3a17 0px,#6d3a17 3px,#4a240c 4px);transform-origin:left top;transform:rotateY(-90deg);display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;padding:1px 0;">
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+   </div>
+   <div style="position:absolute;right:0;top:4px;width:17px;height:40px;background:repeating-linear-gradient(to bottom,#8a4b20 0px,#8a4b20 3px,#5c2d10 4px);transform-origin:right top;transform:rotateY(90deg);display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;padding:1px 0;">
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+    <div style="width:11px;height:6px;background:#d8eaec;border:1px solid #2e1506;opacity:.95;box-shadow:inset 0 0 2px rgba(0,0,0,.5);"></div>
+   </div>
+   <div style="position:absolute;left:0;top:4px;width:30px;height:17px;background:#542b10;transform-origin:top;transform:rotateX(90deg);display:flex;align-items:center;justify-content:center;">
+    <div style="width:10px;height:13px;background:#2a1406;border:1px solid #733c19;"></div>
+   </div>
+   <div style="position:absolute;left:0;bottom:4px;width:30px;height:17px;background:#42200a;transform-origin:bottom;transform:rotateX(-90deg);display:flex;align-items:center;justify-content:center;">
+    <div style="width:10px;height:13px;background:#241004;border:1px solid #613012;"></div>
+   </div>
+   <div style="position:absolute;inset:0;background:#292017;transform:translateZ(17px);border-radius:4px;border:1px solid #4a3826;box-shadow:inset 0 0 6px rgba(0,0,0,.6);display:flex;justify-content:center;align-items:center;">
+    <div style="width:16px;height:38px;background:linear-gradient(to right,#382c20 0%,#4a3b2c 50%,#382c20 100%);border-radius:3px;border:1px solid #5a4734;transform:translateZ(3px);box-shadow:0 0 3px rgba(0,0,0,.5);"></div>
+   </div>
+  </div>
+ </div>`;
+}
+
+function updateTrainScale(){
+ if(!map||!profileMarker)return;
+ const z=map.getZoom();
+ const s=Math.min(1.15,Math.max(0.6,Math.pow(2,(z-14.5)*0.8)));
+ profileMarker.getElement()?.style.setProperty('--train-scale',s.toFixed(2));
 }
 
 function setDrawingQuality(ratio){
@@ -294,10 +414,10 @@ async function init(){
   if(!window.maplibregl)throw new Error('No se pudo cargar el motor cartográfico local.');
   maplibregl.addProtocol('localtile',tileProtocol);
   map=new maplibregl.Map({container:'map',...initial,zoom:initialZoom(),maxPitch:80,minZoom:7,maxZoom:17,maxBounds:[[-90.29,12.96],[-87.42,14.63]],attributionControl:false,pixelRatio:1.5,renderWorldCopies:false,maxTileCacheSize:72,fadeDuration:0,canvasContextAttributes:{preserveDrawingBuffer:false,antialias:true},style:{version:8,glyphs:baseURL+'vendor/fonts/{fontstack}/{range}.pbf',sources:{tintas:{type:'raster',tiles:['localtile://sombreado/{z}/{x}/{y}'],tileSize:256,minzoom:6,maxzoom:12,attribution:'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Mapzen / USGS / NASA</a>'},dem:{type:'raster-dem',tiles:['localtile://terreno/{z}/{x}/{y}'],tileSize:256,encoding:'terrarium',minzoom:6,maxzoom:12}},layers:[{id:'background',type:'background',paint:{'background-color':'#d9dfca'}},{id:'tintas',type:'raster',source:'tintas',paint:{'raster-fade-duration':0}}],terrain:{source:'dem',exaggeration:1.5},sky:{'sky-color':'#bfd3d0','horizon-color':'#f2eddb','fog-color':'#e5e6d5','sky-horizon-blend':.7,'horizon-fog-blend':.6,'fog-ground-blend':.2}}});
-  window.railwayAtlas={state,get map(){return map;},elevationAt,selectRoute,selectPlace,get profile(){return profileSamples;},get points(){return points;}};
+  window.railwayAtlas={state,get map(){return map;},get profileMarker(){return profileMarker;},elevationAt,selectRoute,selectPlace,get profile(){return profileSamples;},get points(){return points;}};
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');map.addControl(new maplibregl.ScaleControl({maxWidth:110,unit:'metric'}),'bottom-left');map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:'<a href="https://www.openstreetmap.org/copyright">© OSM</a> · <a href="https://www.geoboundaries.org/">geoBoundaries / OSM · CC BY-SA 2.0</a> · Natural Earth · Martin 1911 · GeoNames CC BY 4.0'}),'bottom-right');
-  const markerEl=document.createElement('div');markerEl.className='route-point';markerEl.innerHTML='<img src="assets/locomotora.svg" alt="" draggable="false">';markerEl.setAttribute('aria-label','Locomotora de vapor del Salvador Railway');markerEl.setAttribute('role','img');profileMarker=new maplibregl.Marker({element:markerEl,anchor:'center',opacity:1,opacityWhenCovered:1,rotationAlignment:'map',pitchAlignment:'viewport'});
-  map.on('load',()=>{addLayers(hydro,contours,osm,borders);buildUI();bindEvents();observeNavigation();ensureLayerData('departments');applyVisibility();$('pitch').value=map.getPitch();$('pitchValue').textContent=fmt(map.getPitch())+'°';selectRoute('principal');if(innerWidth<681){document.body.classList.add('sidebar-collapsed');$('toggleSidebar').setAttribute('aria-expanded','false');}map.resize();$('loading').hidden=true;document.body.dataset.ready='true';});
+  const markerEl=document.createElement('div');markerEl.className='route-point';markerEl.innerHTML=createTrain3DHTML();markerEl.setAttribute('aria-label','Tren a vapor 3D del Salvador Railway');markerEl.setAttribute('role','img');profileMarker=new maplibregl.Marker({element:markerEl,anchor:'center',opacity:1,opacityWhenCovered:1,rotationAlignment:'map',pitchAlignment:'map'});
+  map.on('load',()=>{addLayers(hydro,contours,osm,borders);buildUI();bindEvents();observeNavigation();ensureLayerData('departments');applyVisibility();$('pitch').value=map.getPitch();$('pitchValue').textContent=fmt(map.getPitch())+'°';selectRoute('principal');map.on('zoom',updateTrainScale);updateTrainScale();if(innerWidth<681){document.body.classList.add('sidebar-collapsed');$('toggleSidebar').setAttribute('aria-expanded','false');}map.resize();$('loading').hidden=true;document.body.dataset.ready='true';});
   let errorCount=0;map.on('error',e=>{console.error('Map error:',e.error);if(state.base!=='relief'&&errorCount++<2){setBase('relief');notify('La capa en línea no respondió. Se muestra el relieve local.');}else if(errorCount++<3)notify('No se pudo cargar una parte de la cartografía. Consulta la consola o vuelve a la vista inicial.');});
  }catch(e){console.error(e);$('loading').hidden=true;notify(e.message+' Usa INICIAR VISOR.command para abrir el servidor local.',0);document.body.dataset.error=e.message;}
 }
