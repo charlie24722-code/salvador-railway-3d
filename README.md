@@ -10,7 +10,7 @@ El visor es estático: no necesita compilar ni ejecutar Python en GitHub.
 2. En **Build and deployment**, selecciona **Deploy from a branch**.
 3. Elige **main** y **/(root)**; pulsa **Save**.
 
-El archivo `.nojekyll` permite servir directamente los archivos. Las rutas son relativas y admiten la subcarpeta del repositorio. No se activa Pages automáticamente: la publicación la controla el propietario.
+El archivo `.nojekyll` permite servir directamente los archivos. Las rutas son relativas y admiten la subcarpeta del repositorio. Este repositorio tiene Pages activado por el propietario sobre `main` y la raíz del repositorio.
 
 ## Abrir localmente
 
@@ -47,8 +47,8 @@ No abras `index.html` directamente con `file://`: el navegador bloquea las lectu
 | Perfil y consultas | DEM z12 | Rejilla 1664×1152; muestreo cada dos píxeles, unos 74 m | Redondeo a metros; interpolación bilineal; altura independiente de exageración |
 | Curvas | DEM z12 | Rejilla reducida cada cuatro píxeles, unos 148 m | Marching squares cada 100 m; unión de segmentos y simplificación de vértices |
 | Vías y agua | © OpenStreetMap contributors, ODbL; Overpass | Snapshot con `timestamp_osm_base` en cada respuesta | GeoJSON; unión de anillos de relaciones para lagos; las trazas modernas se muestran separadas |
-| Itinerarios de 1911 | Conectividad de Martin + corredores de OSM | **Todo el trazado histórico es aproximado**, incluso donde sigue OSM | Caminos sobre el grafo, unión de extremos a menos de 180 m e interpolación de huecos; ramal La Ceiba interpretativo |
-| Estaciones | Símbolos y nombres de la lámina | Anclajes aproximados de localidades/corredores; no ubicaciones certificadas de edificios | Inventario conservado en `data/estaciones.json`; identificación manual |
+| Itinerarios de 1911 | Conectividad de Martin + corredores de OSM | **Todo el trazado histórico es aproximado**, incluso donde sigue OSM | Caminos sobre el grafo, unión de extremos a menos de 180 m y dos conexiones interpretativas entre extremos identificados; huecos morados separados del corredor OSM; ramal La Ceiba interpretativo |
+| Estaciones | Símbolos y nombres de la lámina | Anclajes aproximados de localidades/corredores; no ubicaciones certificadas de edificios | Anclaje original conservado en `referenceCoordinates`; posición visual proyectada al corredor OSM; no identifica un edificio |
 | Los Lagartos | Lista pluviométrica de 1959, repositorio CEPAL, estación T11 | 13°45′ N, 89°34′ O; referencia de área, **no identifica la estación ferroviaria** | Anclaje aproximado, declarado como tal en ficha |
 | Volcanes | Smithsonian GVP y MARN/SNET | Coordenadas y cotas de catálogo; consulta 15/10/2026 | Fichas con enlace individual; separación entre cota publicada y altura del suelo en el punto |
 
@@ -87,7 +87,7 @@ No se modificaron documentos académicos existentes. El proyecto se publica en u
 
 ## Ajuste de rendimiento
 
-Una sola fuente DEM activa; sombreado precalculado en teselas en lugar de una segunda fuente de elevación y un cálculo de sombras en cada cuadro. Dibujo limitado por defecto a 1 píxel por píxel CSS incluso en pantallas Retina; regulable entre 0,75× y 1,5× en Capas. Se desactiva antialiasing multisample y la conservación permanente del buffer de dibujo. Las curvas y las vías OSM se leen solo al solicitarlas. La hidrografía visual se reduce de 2,4 MB a unos 840 KB, conservando el archivo completo. Las lecturas bajo el cursor se limitan a 10 por segundo. Estas medidas reducen carga; la velocidad final depende de WebGL y de la GPU del navegador.
+Una sola fuente DEM activa; sombreado precalculado en teselas en lugar de una segunda fuente de elevación y un cálculo de sombras en cada cuadro. Actualización de nitidez: dibujo inicial a 1,5 píxeles por píxel CSS y antialiasing activado; regulable entre 0,75× y 2× en Capas. Durante movimientos se limita automáticamente a 1× (o el valor elegido si es menor); 160 ms después de terminar se recupera la calidad elegida. El guard de resize evita recursión y no llama a map.stop() durante los gestos. El buffer de dibujo no se conserva permanentemente. Los valores de 1× y 0,75× siguen disponibles para equipos con menor capacidad gráfica. Las curvas y las vías OSM se leen solo al solicitarlas. La hidrografía visual se reduce de 2,4 MB a unos 840 KB, conservando el archivo completo. Las lecturas bajo el cursor se limitan a 10 por segundo. Estas medidas reducen carga; la velocidad final depende de WebGL y de la GPU del navegador.
 
 ## Corrección de navegación y fronteras (15/10/2026)
 
@@ -111,7 +111,7 @@ Los rótulos distinguen la estación (`Est. Santa Ana`), el volcán (`Volcán de
 - Cada registro conserva página, enlace al libro, departamento, nombre empleado, papel de cabecera y GeoNames ID. Páginas regionales: 248, 276, 278, 282, 287, 290, 294, 297, 300, 306, 310, 311, 313; San Vicente se documenta en la tabla de la p. 247.
 - Nueva San Salvador traduce `New San Salvador` de la tabla; el propio libro también usa Santa Tecla. Opico, Gotera y Santa Rosa conservan las formas documentadas, con la equivalencia moderna explicada en sus fichas. Se normaliza la errata Ahauchapán según la p. 247.
 - Georreferencia moderna de localidad: GeoNames, https://download.geonames.org/export/dump/SV.zip, CC BY 4.0; consulta 15/10/2026; copia fuente `evidencia/geonames-SV.zip`. Los homónimos se resolvieron con identificadores y departamento. No se usan población ni elevación de GeoNames. Los puntos no reconstruyen las áreas urbanizadas de 1911.
-- Regeneración: `python3 scripts/preparar_ciudades_1911.py`. Se añade filtro «Ciudades 1911» y capa independiente, activada inicialmente. Las poblaciones modernas permanecen disponibles en «Actuales» y su capa inicia apagada. Las estaciones conservan sus puntos y fichas; cuando coinciden los nombres, se omite el rótulo de estación mientras está activa la ciudad para evitar duplicación visual.
+- Regeneración: `python3 scripts/preparar_ciudades_1911.py`. Se añade filtro «Ciudades 1911» y capa independiente, activada inicialmente. Las poblaciones modernas permanecen disponibles en «Actuales» y su capa inicia apagada. Las ciudades conservan su georreferencia de localidad. Desde la corrección del trazado, las estaciones tienen posición visual sobre el corredor, rótulo propio «Est.» y una ficha distinta.
 - `data/etiquetas-departamentos.geojson` contiene un punto por departamento, calculado como centroide del polígono principal. Evita que el nombre se repita al recortar polígonos en teselas. Se regenera con `scripts/preparar_fronteras.py`.
 
 
@@ -128,3 +128,26 @@ Los datos y bibliotecas conservan sus licencias propias. La publicación del có
 - Terrain Tiles: atribuciones por fuente en `evidencia/terrain-attribution.md` y documentación enlazada.
 - Martin (1911): edición digital de Project Gutenberg, con su aviso de procedencia conservado.
 - Esri World Imagery: servicio externo con sus propias condiciones; no se redistribuyen sus teselas.
+
+
+## Corrección del trazado y punto de exploración (15/10/2026)
+
+El generador anterior elegía el vértice OSM más próximo al anclaje de cada estación. Cuando el grafo estaba desconectado, reemplazaba toda la etapa por una recta entre localidades, perdiendo incluso los tramos OSM disponibles. Ahora inserta una proyección sobre el segmento más próximo y conserva los corredores a ambos lados de dos interrupciones:
+
+- Armenia–Ateos: extremos OSM `9271460321` → `360344992`, unos 633 m.
+- Ateos–Sitio del Niño: extremos `4067791037` → `12015595138`, unos 2.095 m.
+
+**Estos dos enlaces son hipótesis entre extremos, no vías verificadas.** Se muestran en morado punteado, al igual que los enlaces menores y todo el ramal de La Ceiba. Las consultas adicionales Overpass del 15/10/2026 devolvieron HTTP 406/500; la reconstrucción usa exclusivamente el snapshot ya conservado en `evidencia/osm-overpass.json`, con base OSM 2026-10-15T14:49:19Z. Los IDs de vía y las secciones interpoladas siguen incluidos en las rutas exportables. `data/tramos-historicos.geojson` separa ambas bases geométricas para su dibujo y consulta.
+
+Las 18 estaciones se dibujan sobre sus itinerarios, proyectando el anclaje orientativo al segmento ferroviario más próximo (La Ceiba mantiene su anclaje por falta de un corredor comprobado). Cada ficha y registro declara este método: es una corrección de coherencia gráfica, **no una nueva localización histórica de edificios**. `referenceCoordinates`, `displayOffsetMeters` y `osmWayId` permiten auditar el desplazamiento. Las ciudades no se desplazan para hacerlas coincidir con la vía; su ficha lo explica y permite abrir la estación cuando coincide el nombre.
+
+La locomotora permanece sobre el recorrido. Se controla con la barra, el selector de paradas, el perfil o un clic sobre una vía. «Centrar punto» acerca la cámara; el indicador muestra distancia, coordenadas, suelo y tramo, señalando conexiones sin confirmar. Se interpola directamente sobre la polilínea original para no cortar curvas entre las 421 muestras del perfil. La navegación manual con el tren detenido no mantiene un bucle de animación.
+
+Validación reproducible: `node scripts/verificar_trazado.cjs`; comprueba las 18 estaciones sobre sus rutas, orden de paradas, continuidad, procedencia y 3.003 posiciones del punto. Resultado en `evidencia/verificacion-trazado.json`. Esto valida la geometría digital y no certifica su exactitud histórica. Longitudes digitales: 104,245 km principal, 39,954 km Santa Ana y 10,394 km La Ceiba.
+
+
+### Recorrido continuo con locomotora
+
+Se reemplazó el avance de cámara por saltos cada 1,5 segundos por una animación que acumula distancia con el tiempo transcurrido y recorre cada segmento de la polilínea. Se limita a 30 actualizaciones por segundo; posición y giro de cámara se actualizan continuamente, con amortiguación de giro. Incluye pausa/reanudación, velocidades visuales 0,5×, 1×, 2× y 4× y seguimiento de cámara independiente. La base de exploración es 300 m/s (acelerada, no una velocidad histórica). Al cambiar de pestaña se pausa; al mover manualmente el mapa se libera la cámara y el tren sigue. No acumula saltos de tiempo tras una pausa. Al llegar al final se detiene y el siguiente inicio vuelve al origen.
+
+`assets/locomotora.svg` es un marcador vectorial propio visto desde arriba; no representa un modelo ferroviario o un edificio documentado. Se orienta con el recorrido, permanece visible sobre el relieve y se incluye en la exportación PNG. La reconstrucción geométrica sigue siendo aproximada.

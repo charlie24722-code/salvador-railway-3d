@@ -27,7 +27,6 @@ rows=[
 stations=[]
 for id,name,lon,lat,kind,description,year in rows:
  stations.append({'id':id,'name':name,'coordinates':[lon,lat],'kind':kind,'description':description,'openedByMartin':year,'precision':'Ubicación aproximada; no levantamiento de 1911','source':'Martin, 1911, mapa frente a p. 198; cronología pp. 197–198','sourceUrl':'https://www.gutenberg.org/files/45102/45102-h/45102-h.htm#Page_197'})
-save('data/estaciones.json',stations)
 # Red moderna OSM; los itinerarios reconstruidos siguen su corredor donde hay continuidad.
 osm=json.loads((R/'evidencia/osm-overpass.json').read_text())
 nodes={};graph={}
@@ -37,6 +36,27 @@ for e in osm['elements']:
  for i,c in zip(ids,g):nodes[i]=[c['lon'],c['lat']];graph.setdefault(i,[])
  for u,v in zip(ids,ids[1:]):
   d=dist(nodes[u],nodes[v]);graph[u].append((v,d,e['id']));graph[v].append((u,d,e['id']))
+# Proyectar anclajes sobre segmentos, no sobre vértices espaciados de OSM.
+# Es una posición de dibujo sobre el corredor, no la georreferencia del edificio.
+def project(p,a,b):
+ dx,dy=(b[0]-a[0])*108000,(b[1]-a[1])*111200
+ t=max(0,min(1,((p[0]-a[0])*108000*dx+(p[1]-a[1])*111200*dy)/(dx*dx+dy*dy or 1)))
+ q=[a[k]+t*(b[k]-a[k]) for k in (0,1)]
+ return dist(p,q),q
+for k,s in enumerate(stations):
+ s['referenceCoordinates']=s['coordinates'][:]
+ if s['id']=='ceiba':continue # no existe un corredor OSM comprobado para este ramal
+ candidates=[(project(s['coordinates'],nodes[u],nodes[v]),u,v,way) for u,edges in graph.items() for v,dd,way in edges if u<v]
+ (offset,q),u,v,way=min(candidates,key=lambda item:item[0][0])
+ n=-(k+1);nodes[n]=q;graph[n]=[]
+ graph[u]=[e for e in graph[u] if e[0]!=v];graph[v]=[e for e in graph[v] if e[0]!=u]
+ for a,b in [(u,n),(n,v)]:
+  dd=dist(nodes[a],nodes[b]);graph[a].append((b,dd,way));graph[b].append((a,dd,way))
+ s['coordinates']=q;s['displayOffsetMeters']=round(offset)
+ s['precision']='Posición de dibujo proyectada sobre el corredor OSM moderno; edificio de 1911 no localizado. Desplazamiento respecto del anclaje orientativo: '+str(round(offset))+' m.'
+ s['positionMethod']='Proyección perpendicular al segmento ferroviario OSM más próximo'
+ s['osmWayId']=way
+save('data/estaciones.json',stations)
 # Unir únicamente extremos próximos, anotándolos como interpolación (sin atribuirlos a OSM).
 ends=[n for n,v in graph.items() if len(v)==1]
 bridges=0
@@ -44,6 +64,11 @@ for k,u in enumerate(ends):
  for v in ends[k+1:]:
   d=dist(nodes[u],nodes[v])
   if d<180:graph[u].append((v,d,None));graph[v].append((u,d,None));bridges+=1
+# Dos interrupciones de la cartografía conservada: mantener los corredores
+# de ambos lados en vez de sustituir toda la etapa por una recta entre pueblos.
+# Estos conectores siguen siendo hipótesis, guardadas y dibujadas por separado.
+for u,v in [(9271460321,360344992),(4067791037,12015595138)]:
+ d=dist(nodes[u],nodes[v]);graph[u].append((v,d,None));graph[v].append((u,d,None))
 byid={s['id']:s for s in stations}
 def nearest(p):return min(nodes,key=lambda n:dist(nodes[n],p))
 def path(a,b):
@@ -55,13 +80,13 @@ def path(a,b):
   for v,dd,way in graph[u]:
    nd=d+dd
    if nd<seen.get(v,1e20):seen[v]=nd;prev[v]=(u,way);heapq.heappush(pq,(nd,v))
- if t not in seen:return [a,b],[],True
+ if t not in seen:raise RuntimeError('Corredor desconectado: '+str((a,b)))
  ids=[t];ways=[]
  while ids[-1]!=s:
   u,way=prev[ids[-1]];ids.append(u);ways.append(way)
  pts=[nodes[n] for n in reversed(ids)]
- return pts,sorted(set(x for x in ways if x is not None)),None in ways
-routes=[]
+ return pts,list(reversed(ways)),None in ways
+routes=[];segments=[]
 for id,name,color,chain in [
 ('principal','Acajutla → San Salvador','#e5a356',['acajutla','hacienda','emilia','sonsonate','zapote','lagartos','armenia','ateos','sitio','quezaltepeque','nejapa','apopa','sansalvador']),
 ('santaana','Sitio del Niño → Santa Ana','#e5a356',['sitio','andres','chilamatal','coatepeque','santaana']),
@@ -71,13 +96,20 @@ for id,name,color,chain in [
   a,b=byid[aa]['coordinates'],byid[bb]['coordinates']
   if id=='ceiba':pts=[a,[-89.426,13.738],[-89.397,13.725],[-89.375,13.719],b];ws=[];gap=True
   else:pts,ws,gap=path(a,b)
+  edgeways=[None]*(len(pts)-1) if id=='ceiba' else ws
+  for u,v,way in zip(pts,pts[1:],edgeways):
+   props={'routeId':id,'from':aa,'to':bb,'basis':'interpolated' if way is None else 'osm','osmWayId':way}
+   if segments and segments[-1]['properties']==props and segments[-1]['geometry']['coordinates'][-1]==u:
+    segments[-1]['geometry']['coordinates'].append(v)
+   else:segments.append({'type':'Feature','properties':props,'geometry':{'type':'LineString','coordinates':[u,v]}})
   # Conectores rectos sólo cuando falta red; todos se declaran interpretativos.
   if coords and dist(coords[-1],pts[0])>1:coords.append(pts[0]);gaps.append([aa,bb])
-  coords.extend(pts if not coords else pts[1:]);ways.update(ws)
+  coords.extend(pts if not coords else pts[1:]);ways.update(w for w in ws if w is not None)
   if gap:gaps.append([aa,bb])
  routes.append({'type':'Feature','properties':{'id':id,'name':name,'status':'Reconstrucción aproximada del itinerario de 1911 sobre corredores OSM modernos; no certifica alineación histórica','osmWayIds':sorted(ways),'interpolatedSections':gaps,'stationIds':chain},'geometry':{'type':'LineString','coordinates':coords}})
  print(name,len(coords),'ways',len(ways),'interpolados',gaps)
 save('data/rutas-historicas.geojson',{'type':'FeatureCollection','features':routes})
 # Capa OSM bruta disponible aparte: no se atribuye al año 1911.
-# Posiciones de las estaciones conservan su precisión declarada; puntos no se desplazan automáticamente a vías.
+save('data/tramos-historicos.geojson',{'type':'FeatureCollection','features':segments})
+# Las ciudades permanecen en sus coordenadas de localidad y no se desplazan.
 print(len(stations),'estaciones;',bridges,'conexiones entre extremos próximos')

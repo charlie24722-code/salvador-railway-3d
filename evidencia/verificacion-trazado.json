@@ -1,0 +1,26 @@
+{
+  "checks": "18 estaciones sobre la vía, orden de paradas, continuidad, procedencia y 3003 posiciones de marcador",
+  "routes": [
+    {
+      "route": "principal",
+      "km": 104.245,
+      "stations": 13,
+      "uncertainConnections": 5,
+      "uncertainKm": 2.917
+    },
+    {
+      "route": "santaana",
+      "km": 39.954,
+      "stations": 5,
+      "uncertainConnections": 1,
+      "uncertainKm": 0.043
+    },
+    {
+      "route": "ceiba",
+      "km": 10.394,
+      "stations": 2,
+      "uncertainConnections": 1,
+      "uncertainKm": 10.394
+    }
+  ]
+}
