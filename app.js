@@ -157,9 +157,9 @@ function setRouteDistance(d){
  const section=routeSections.find(p=>s.d>=p.start-0.1&&s.d<p.end-0.1)||routeSections.at(-1);
  $('routeSegment').textContent=(exact?exact.name:`${routeStops[Math.max(0,n-1)].name} → ${routeStops[n].name}`)+(section?.basis==='interpolated'?' · conexión sin confirmar':' · corredor OSM, aproximado');
  $('routeStop').value=exact?.id||'';profileMarker.setLngLat(s.p).addTo(map);
- const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(total,s.d+40)).p;
+ const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(total,s.d+35)).p;
  if(!state.tour&&s.d<total-1){const heading=Math.atan2((look[0]-s.p[0])*Math.cos(s.p[1]*Math.PI/180),look[1]-s.p[1])*180/Math.PI;profileMarker.setRotation(heading);}
- profileMarker.getElement().title=`Locomotora · ${fmt(s.d/1000,1)} km`;
+ profileMarker.getElement().title=`Locomotora de vapor · ${fmt(s.d/1000,1)} km`;
  if(!state.tour)$('trainStatus').textContent=`Detenido · ${fmt(s.d/1000,1)} km`;
  return s;
 }
@@ -187,12 +187,12 @@ function trainStep(time){
  trainLastTime=time;
  const dt=Math.min(elapsed/1000,.1),total=routeCum.at(-1);
  const s=setRouteDistance(Math.min(total,routeDistance+300*state.trainSpeed*dt));
- const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(total,s.d+120)).p;
+ const look=RouteGeometry.atDistance(routeCoords,routeCum,Math.min(total,s.d+35)).p;
  const heading=Math.atan2((look[0]-s.p[0])*Math.cos(s.p[1]*Math.PI/180),look[1]-s.p[1])*180/Math.PI;
  const turn=((heading-trainHeading+540)%360)-180;
- trainHeading+=turn*(1-Math.exp(-dt/1.2));profileMarker.setRotation(trainHeading);
+ trainHeading+=turn*(1-Math.exp(-dt/.8));profileMarker.setRotation(trainHeading);
  $('trainStatus').textContent=`En marcha · ${fmt(state.trainSpeed,1)}×`;
- if(state.followTrain)map.easeTo({center:s.p,bearing:trainHeading,zoom:13,pitch:60,offset:[0,-Math.min(130,$('profile').clientHeight/2)],duration:0});
+ if(state.followTrain)map.jumpTo({center:s.p,bearing:trainHeading,zoom:13,pitch:60,offset:[0,-Math.min(130,$('profile').clientHeight/2)]});
  if(s.d>=total){stopTour();$('trainStatus').textContent='Llegada al final de la ruta';return;}
  trainFrame=requestAnimationFrame(trainStep);
 }
@@ -220,11 +220,8 @@ function bindEvents(){
  document.querySelectorAll('[role=tab]').forEach(b=>b.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();const other=b.id==='tab-explore'?$('tab-layers'):$('tab-explore');other.click();other.focus();}});
  $('baseOptions').onclick=e=>{const b=e.target.closest('[data-base]');if(b)setBase(b.dataset.base);};
  let heightTimer;$('exaggeration').oninput=e=>{state.exaggeration=Number(e.target.value);$('exaggerationValue').textContent=fmt(state.exaggeration,1)+'×';clearTimeout(heightTimer);heightTimer=setTimeout(()=>{if(state.terrain)map.setTerrain({source:'dem',exaggeration:state.exaggeration});},140);};
- $('pitch').oninput=e=>{stopMotion();map.setPitch(Number(e.target.value));};$('quality').oninput=e=>{const ratio=Number(e.target.value);qualityRatio=ratio;$('qualityValue').textContent=fmt(ratio,2)+'×';setDrawingQuality(map.isMoving()?Math.min(1,ratio):ratio);};
- // Resolución alta en reposo; reducir solo durante movimiento real. El guard
- // evita que resize() convierta el ajuste en un nuevo movimiento de cámara.
- map.on('movestart',()=>{if(changingQuality)return;clearTimeout(qualityTimer);setDrawingQuality(Math.min(1,qualityRatio));});
- map.on('moveend',()=>{if(changingQuality)return;clearTimeout(qualityTimer);qualityTimer=setTimeout(()=>{if(!map.isMoving())setDrawingQuality(qualityRatio);},160);});
+ $('pitch').oninput=e=>{stopMotion();map.setPitch(Number(e.target.value));};
+ $('quality').oninput=e=>{const ratio=Number(e.target.value);qualityRatio=ratio;$('qualityValue').textContent=fmt(ratio,2)+'×';setDrawingQuality(ratio);};
  map.on('pitch',()=>{$('pitchValue').textContent=fmt(map.getPitch())+'°';$('pitch').value=map.getPitch();});
  $('closeDetail').onclick=()=>{$('detail').hidden=true;state.selected=null;map.getSource('selection').setData(featureCollection([]));renderPlaces();};
  $('resetView').onclick=()=>{stopMotion();map.flyTo({...initial,zoom:initialZoom(),duration:1500});};
@@ -234,11 +231,25 @@ function bindEvents(){
  $('tourButton').onclick=()=>{if(state.tour){stopTour();map.stop();return;}startTrain();};
  $('followTrain').onchange=e=>{state.followTrain=e.target.checked;};
  $('trainSpeed').onchange=e=>{state.trainSpeed=Number(e.target.value);};
- // map.stop() también detiene los handlers del gesto actual. El usuario debe
- // interrumpir únicamente el recorrido programado, sin cancelar su arrastre.
- for(const ev of ['dragstart','zoomstart','rotatestart','pitchstart'])map.on(ev,e=>{if(e.originalEvent){state.followTrain=false;$('followTrain').checked=false;stopOrbit();}});
+
+ // Liberar la cámara inmediatamente si el usuario arrastra, hace zoom o rota manualmente
+ const releaseUserCamera=()=>{
+  if(state.followTrain){state.followTrain=false;$('followTrain').checked=false;}
+  if(state.orbit)stopOrbit();
+ };
+ const canvasEl=map.getCanvasContainer();
+ canvasEl.addEventListener('pointerdown',releaseUserCamera,{passive:true});
+ canvasEl.addEventListener('touchstart',releaseUserCamera,{passive:true});
+ canvasEl.addEventListener('wheel',releaseUserCamera,{passive:true});
+ for(const ev of ['movestart','zoomstart','rotatestart','pitchstart'])map.on(ev,e=>{if(e&&e.originalEvent)releaseUserCamera();});
+
  $('toggleSidebar').onclick=()=>{document.body.classList.toggle('sidebar-collapsed');$('toggleSidebar').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-collapsed')));map.resize();drawProfile();setRouteDistance(routeDistance);};
  $('collapseProfile').onclick=()=>{const collapsed=!$('profileBody').hidden;$('profileBody').hidden=collapsed;document.body.classList.toggle('profile-collapsed',collapsed);$('collapseProfile').textContent=collapsed?'⌃':'⌄';$('collapseProfile').setAttribute('aria-expanded',String(!collapsed));if(!collapsed){drawProfile();setRouteDistance(routeDistance);}};
+
+ // Ocultar por completo el panel de itinerario y restaurarlo con la pastilla flotante
+ $('closeProfile').onclick=()=>{document.body.classList.add('profile-hidden');$('restoreProfile').hidden=false;map.resize();};
+ $('restoreProfile').onclick=()=>{document.body.classList.remove('profile-hidden');$('restoreProfile').hidden=true;map.resize();drawProfile();setRouteDistance(routeDistance);};
+
  $('profileChart').onclick=e=>{const r=e.currentTarget.getBoundingClientRect(),t=Math.max(0,Math.min(1,(e.clientX-r.left-31)/(r.width-38)));stopMotion();tourIndex=Math.round(t*420);setRouteDistance(t*routeCum.at(-1));};
  $('routeProgress').oninput=e=>{stopMotion();const t=Number(e.target.value)/1000;tourIndex=Math.round(t*420);setRouteDistance(t*routeCum.at(-1));};
  $('routeStop').onchange=e=>{const p=routeStops.find(p=>p.id===e.target.value);if(p){stopMotion();setRouteDistance(p.d);tourIndex=Math.round(p.d/routeCum.at(-1)*420);centerRoutePoint();}};
@@ -251,7 +262,7 @@ function bindEvents(){
  if(hit.length){const id=hit[0].properties.routeId;if(id!==state.route)selectRoute(id);else stopMotion();const s=RouteGeometry.project([e.lngLat.lng,e.lngLat.lat],routeCoords,routeCum);setRouteDistance(s.d);tourIndex=Math.round(s.d/routeCum.at(-1)*420);return;}
  const hs=map.queryRenderedFeatures(e.point,{layers:['water','rivers']});if(hs[0]?.properties.name)new maplibregl.Popup().setLngLat(e.lngLat).setText(hs[0].properties.name+' · OpenStreetMap').addTo(map);}});
  let lastPointerRead=0;map.on('mousemove',e=>{const now=performance.now();if(now-lastPointerRead<100)return;lastPointerRead=now;$('coordinates').textContent=`${fmt(e.lngLat.lat,4)}° N · ${fmt(Math.abs(e.lngLat.lng),4)}° O`;const h=elevationAt([e.lngLat.lng,e.lngLat.lat]);$('elevation').textContent=h==null?'Fuera de la rejilla de consulta':`Suelo DEM: ≈ ${fmt(h)} m s. n. m.`;});
- $('snapshot').onclick=()=>{notify('Preparando captura…',0);map.once('render',()=>{try{notify('Generando imagen…',0);const canvas=document.createElement('canvas'),src=map.getCanvas();canvas.width=src.width;canvas.height=src.height+105;const ctx=canvas.getContext('2d');ctx.drawImage(src,0,0);if(state.layers.rail){const mr=profileMarker.getElement().getBoundingClientRect(),cr=src.getBoundingClientRect(),scale=src.width/cr.width;ctx.beginPath();ctx.arc((mr.x+mr.width/2-cr.x)*scale,(mr.y+mr.height/2-cr.y)*scale,10*scale,0,Math.PI*2);ctx.fillStyle='#20718d';ctx.fill();ctx.lineWidth=3*scale;ctx.strokeStyle='#fff9e7';ctx.stroke();const img=profileMarker.getElement().querySelector('img');if(img.complete&&img.naturalWidth){ctx.save();ctx.translate((mr.x+mr.width/2-cr.x)*scale,(mr.y+mr.height/2-cr.y)*scale);ctx.rotate((profileMarker.getRotation()-map.getBearing())*Math.PI/180);ctx.drawImage(img,-15*scale,-26*scale,30*scale,52*scale);ctx.restore();}}ctx.fillStyle='#f5f2e9';ctx.fillRect(0,src.height,canvas.width,105);ctx.fillStyle='#243d36';ctx.font='22px Georgia';ctx.fillText('Salvador Railway · Atlas del relieve / 1911',18,src.height+29);ctx.font='12px sans-serif';ctx.fillText('Locomotora: '+fmt(routeDistance/1000,1)+' km · Rutas aproximadas · DEM moderno · Exageración '+state.exaggeration+'× · Base: '+state.base,18,src.height+51);ctx.fillText('Relieve: Mapzen / USGS / NASA · © OSM · Límites: geoBoundaries / OSM, CC BY-SA 2.0',18,src.height+71);ctx.fillText(state.base==='satellite'?'Imágenes © Esri y proveedores · Fuente histórica: P. F. Martin (1911), p. 198':'Martin (1911): mapa p. 198 y ciudades pp. 247–313 · Georreferencia: GeoNames CC BY 4.0',18,src.height+91);canvas.toBlob(blob=>{if(blob){$('notice').hidden=true;if(captureURL)URL.revokeObjectURL(captureURL);captureURL=URL.createObjectURL(blob);$('capturePreview').src=captureURL;$('captureDownload').href=captureURL;$('captureDialog').showModal();}else notify('No se pudo generar la captura.');});}catch(e){notify('No se pudo guardar la captura: '+e.message,0);}});map.triggerRepaint();};
+ $('snapshot').onclick=()=>{notify('Preparando captura…',0);map.once('render',()=>{try{notify('Generando imagen…',0);const canvas=document.createElement('canvas'),src=map.getCanvas();canvas.width=src.width;canvas.height=src.height+105;const ctx=canvas.getContext('2d');ctx.drawImage(src,0,0);if(state.layers.rail){const mr=profileMarker.getElement().getBoundingClientRect(),cr=src.getBoundingClientRect(),scale=src.width/cr.width;const img=profileMarker.getElement().querySelector('img');if(img.complete&&img.naturalWidth){ctx.save();ctx.translate((mr.x+mr.width/2-cr.x)*scale,(mr.y+mr.height/2-cr.y)*scale);ctx.rotate((profileMarker.getRotation()-map.getBearing())*Math.PI/180);ctx.drawImage(img,-14*scale,-36*scale,28*scale,72*scale);ctx.restore();}}ctx.fillStyle='#f5f2e9';ctx.fillRect(0,src.height,canvas.width,105);ctx.fillStyle='#243d36';ctx.font='22px Georgia';ctx.fillText('Salvador Railway · Atlas del relieve / 1911',18,src.height+29);ctx.font='12px sans-serif';ctx.fillText('Locomotora: '+fmt(routeDistance/1000,1)+' km · Rutas aproximadas · DEM moderno · Exageración '+state.exaggeration+'× · Base: '+state.base,18,src.height+51);ctx.fillText('Relieve: Mapzen / USGS / NASA · © OSM · Límites: geoBoundaries / OSM, CC BY-SA 2.0',18,src.height+71);ctx.fillText(state.base==='satellite'?'Imágenes © Esri y proveedores · Fuente histórica: P. F. Martin (1911), p. 198':'Martin (1911): mapa p. 198 y ciudades pp. 247–313 · Georreferencia: GeoNames CC BY 4.0',18,src.height+91);canvas.toBlob(blob=>{if(blob){$('notice').hidden=true;if(captureURL)URL.revokeObjectURL(captureURL);captureURL=URL.createObjectURL(blob);$('capturePreview').src=captureURL;$('captureDownload').href=captureURL;$('captureDialog').showModal();}else notify('No se pudo generar la captura.');});}catch(e){notify('No se pudo guardar la captura: '+e.message,0);}});map.triggerRepaint();};
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.map-shell').requestFullscreen();}catch{notify('Este navegador no permite pantalla completa; puedes ampliar la ventana.');}};
  document.addEventListener('fullscreenchange',()=>{map.resize();drawProfile();setRouteDistance(routeDistance);});
  for(const [button,dialog] of [['originalButton','originalDialog'],['sourcesButton','sourcesDialog'],['helpButton','helpDialog']])$(button).onclick=()=>$(dialog).showModal();
@@ -285,7 +296,7 @@ async function init(){
   map=new maplibregl.Map({container:'map',...initial,zoom:initialZoom(),maxPitch:80,minZoom:7,maxZoom:17,maxBounds:[[-90.29,12.96],[-87.42,14.63]],attributionControl:false,pixelRatio:1.5,renderWorldCopies:false,maxTileCacheSize:72,fadeDuration:0,canvasContextAttributes:{preserveDrawingBuffer:false,antialias:true},style:{version:8,glyphs:baseURL+'vendor/fonts/{fontstack}/{range}.pbf',sources:{tintas:{type:'raster',tiles:['localtile://sombreado/{z}/{x}/{y}'],tileSize:256,minzoom:6,maxzoom:12,attribution:'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Mapzen / USGS / NASA</a>'},dem:{type:'raster-dem',tiles:['localtile://terreno/{z}/{x}/{y}'],tileSize:256,encoding:'terrarium',minzoom:6,maxzoom:12}},layers:[{id:'background',type:'background',paint:{'background-color':'#d9dfca'}},{id:'tintas',type:'raster',source:'tintas',paint:{'raster-fade-duration':0}}],terrain:{source:'dem',exaggeration:1.5},sky:{'sky-color':'#bfd3d0','horizon-color':'#f2eddb','fog-color':'#e5e6d5','sky-horizon-blend':.7,'horizon-fog-blend':.6,'fog-ground-blend':.2}}});
   window.railwayAtlas={state,get map(){return map;},elevationAt,selectRoute,selectPlace,get profile(){return profileSamples;},get points(){return points;}};
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');map.addControl(new maplibregl.ScaleControl({maxWidth:110,unit:'metric'}),'bottom-left');map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:'<a href="https://www.openstreetmap.org/copyright">© OSM</a> · <a href="https://www.geoboundaries.org/">geoBoundaries / OSM · CC BY-SA 2.0</a> · Natural Earth · Martin 1911 · GeoNames CC BY 4.0'}),'bottom-right');
-  const markerEl=document.createElement('div');markerEl.className='route-point';markerEl.innerHTML='<img src="assets/locomotora.svg" alt="" draggable="false">';markerEl.setAttribute('aria-label','Locomotora del recorrido');markerEl.setAttribute('role','img');profileMarker=new maplibregl.Marker({element:markerEl,opacity:1,opacityWhenCovered:1,rotationAlignment:'map',pitchAlignment:'viewport'});
+  const markerEl=document.createElement('div');markerEl.className='route-point';markerEl.innerHTML='<img src="assets/locomotora.svg" alt="" draggable="false">';markerEl.setAttribute('aria-label','Locomotora de vapor del Salvador Railway');markerEl.setAttribute('role','img');profileMarker=new maplibregl.Marker({element:markerEl,anchor:'center',opacity:1,opacityWhenCovered:1,rotationAlignment:'map',pitchAlignment:'viewport'});
   map.on('load',()=>{addLayers(hydro,contours,osm,borders);buildUI();bindEvents();observeNavigation();ensureLayerData('departments');applyVisibility();$('pitch').value=map.getPitch();$('pitchValue').textContent=fmt(map.getPitch())+'°';selectRoute('principal');if(innerWidth<681){document.body.classList.add('sidebar-collapsed');$('toggleSidebar').setAttribute('aria-expanded','false');}map.resize();$('loading').hidden=true;document.body.dataset.ready='true';});
   let errorCount=0;map.on('error',e=>{console.error('Map error:',e.error);if(state.base!=='relief'&&errorCount++<2){setBase('relief');notify('La capa en línea no respondió. Se muestra el relieve local.');}else if(errorCount++<3)notify('No se pudo cargar una parte de la cartografía. Consulta la consola o vuelve a la vista inicial.');});
  }catch(e){console.error(e);$('loading').hidden=true;notify(e.message+' Usa INICIAR VISOR.command para abrir el servidor local.',0);document.body.dataset.error=e.message;}

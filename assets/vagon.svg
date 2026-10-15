@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="104" viewBox="0 0 48 104">
+ <!-- Coche de pasajeros genérico de principios del siglo XX, vista cenital. Ilustración propia. -->
+ <defs>
+  <linearGradient id="roof" x1="0" x2="1"><stop offset="0" stop-color="#a59a7c"/><stop offset=".3" stop-color="#ece2c6"/><stop offset=".5" stop-color="#f7efd8"/><stop offset=".75" stop-color="#d6caa8"/><stop offset="1" stop-color="#8f8466"/></linearGradient>
+ </defs>
+ <g fill="#2a2725" stroke="#111" stroke-width=".7">
+  <rect x="3.5" y="12" width="4.5" height="12" rx="2"/><rect x="40" y="12" width="4.5" height="12" rx="2"/>
+  <rect x="3.5" y="80" width="4.5" height="12" rx="2"/><rect x="40" y="80" width="4.5" height="12" rx="2"/>
+ </g>
+ <rect x="6" y="1" width="36" height="102" rx="2.5" fill="#1b1a19"/>
+ <!-- plataformas con barandilla -->
+ <g fill="#4a3a2c" stroke="#c9b98f" stroke-width=".7"><rect x="8" y="2" width="32" height="7" rx="1"/><rect x="8" y="95" width="32" height="7" rx="1"/></g>
+ <!-- caja (costados visibles) y techo -->
+ <rect x="7" y="8.5" width="34" height="87" rx="2" fill="#7a2a20"/>
+ <rect x="8.5" y="9.5" width="31" height="85" rx="5" fill="url(#roof)" stroke="#6d6249" stroke-width=".6"/>
+ <!-- linterna central con ventilación -->
+ <rect x="18" y="14" width="12" height="76" rx="3" fill="#c7bb98" stroke="#7d7258" stroke-width=".6"/>
+ <g fill="#5f5644"><rect x="21" y="20" width="6" height="3" rx=".8"/><rect x="21" y="34" width="6" height="3" rx=".8"/><rect x="21" y="48" width="6" height="3" rx=".8"/><rect x="21" y="62" width="6" height="3" rx=".8"/><rect x="21" y="76" width="6" height="3" rx=".8"/></g>
+ <g fill="#d9b25a"><rect x="7" y="8.5" width="1.4" height="87"/><rect x="39.6" y="8.5" width="1.4" height="87"/></g>
+</svg>

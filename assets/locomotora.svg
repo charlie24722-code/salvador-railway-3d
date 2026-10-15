@@ -1,1 +1,194 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="36" height="64" viewBox="0 0 36 64"><defs><linearGradient id="b"><stop stop-color="#192d2b"/><stop offset=".45" stop-color="#52615b"/><stop offset=".68" stop-color="#243b35"/><stop offset="1" stop-color="#101f1d"/></linearGradient></defs><g stroke="#f9efd7" stroke-width=".7"><path d="M18 1 9 10h18Z" fill="#aa643b"/><path d="M7 12h22v37H7Z" fill="#283936"/><path d="M3 15h5v7H3zm25 0h5v7h-5zM3 28h5v7H3zm25 0h5v7h-5zM3 41h5v9H3zm25 0h5v9h-5z" fill="#151f1d"/><rect x="10" y="10" width="16" height="32" rx="7" fill="url(#b)"/><circle cx="18" cy="15" r="4" fill="#0f201d"/><circle cx="18" cy="27" r="2.5" fill="#c99651"/><path d="M7 43h22v16H7Z" fill="#a45e39"/><path d="M10 46h16v10H10Z" fill="url(#b)"/><path d="M9 60h18" stroke="#d1ac72" stroke-width="2"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="144" viewBox="0 0 56 144">
+  <!-- Locomotora de vapor y ténder del Salvador Railway (c. 1911) - Vista cenital detallada -->
+  <defs>
+    <!-- Haz de luz del faro -->
+    <linearGradient id="headlightBeam" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#fff5cc" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#ffe680" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffe680" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Brillo cilíndrico de la caldera -->
+    <linearGradient id="boilerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0e1714"/>
+      <stop offset="18%" stop-color="#1d2e27"/>
+      <stop offset="42%" stop-color="#416154"/>
+      <stop offset="50%" stop-color="#648f7d"/>
+      <stop offset="58%" stop-color="#416154"/>
+      <stop offset="82%" stop-color="#1d2e27"/>
+      <stop offset="100%" stop-color="#0e1714"/>
+    </linearGradient>
+    <!-- Caja de humo (negro grafito) -->
+    <linearGradient id="smokeboxGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0c0c"/>
+      <stop offset="25%" stop-color="#181c1b"/>
+      <stop offset="50%" stop-color="#363d3b"/>
+      <stop offset="75%" stop-color="#181c1b"/>
+      <stop offset="100%" stop-color="#0a0c0c"/>
+    </linearGradient>
+    <!-- Latón pulido (domos, campana, cinchos) -->
+    <radialGradient id="brassShine" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff4c2"/>
+      <stop offset="35%" stop-color="#e5b44b"/>
+      <stop offset="75%" stop-color="#9e6e18"/>
+      <stop offset="100%" stop-color="#543707"/>
+    </radialGradient>
+    <linearGradient id="brassBand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7a5513"/>
+      <stop offset="45%" stop-color="#ffde73"/>
+      <stop offset="60%" stop-color="#f0be43"/>
+      <stop offset="100%" stop-color="#7a5513"/>
+    </linearGradient>
+    <!-- Techo de la cabina -->
+    <linearGradient id="cabRoof" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a1c1b"/>
+      <stop offset="30%" stop-color="#323b37"/>
+      <stop offset="50%" stop-color="#4b5752"/>
+      <stop offset="70%" stop-color="#323b37"/>
+      <stop offset="100%" stop-color="#1a1c1b"/>
+    </linearGradient>
+    <!-- Depósito de agua del ténder -->
+    <linearGradient id="tenderTank" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#111c18"/>
+      <stop offset="30%" stop-color="#233830"/>
+      <stop offset="50%" stop-color="#3d5a4f"/>
+      <stop offset="70%" stop-color="#233830"/>
+      <stop offset="100%" stop-color="#111c18"/>
+    </linearGradient>
+    <!-- Sombra suave de contacto bajo el tren -->
+    <filter id="trainShadow" x="-20%" y="-15%" width="140%" height="135%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#0a120e" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <!-- Haz de luz que ilumina las vías adelante -->
+  <polygon points="28,24 8,-22 48,-22" fill="url(#headlightBeam)" pointer-events="none"/>
+
+  <g filter="url(#trainShadow)">
+    <!-- ==================== CILINDROS Y BASTIDOR INFERIOR ==================== -->
+    <!-- Cilindros de vapor delanteros -->
+    <rect x="7" y="32" width="7" height="15" rx="2" fill="#202624" stroke="#0d1110" stroke-width="0.7"/>
+    <rect x="42" y="32" width="7" height="15" rx="2" fill="#202624" stroke="#0d1110" stroke-width="0.7"/>
+    <rect x="8" y="33" width="5" height="4" rx="1" fill="#75827e"/>
+    <rect x="43" y="33" width="5" height="4" rx="1" fill="#75827e"/>
+
+    <!-- Pasarelas / estribos laterales -->
+    <rect x="10" y="34" width="36" height="47" rx="1" fill="#1b211f"/>
+    <!-- Bordes metálicos de pasarela -->
+    <line x1="10" y1="34" x2="10" y2="81" stroke="#36403d" stroke-width="1.2"/>
+    <line x1="46" y1="34" x2="46" y2="81" stroke="#36403d" stroke-width="1.2"/>
+
+    <!-- ==================== QUITAPIEDRAS (PILOT / COWCATCHER) ==================== -->
+    <polygon points="28,14 13,27 43,27" fill="#141817" stroke="#0d100f" stroke-width="0.8"/>
+    <!-- Listones metálicos del quitapiedras -->
+    <line x1="28" y1="15" x2="17" y2="27" stroke="#bda260" stroke-width="0.9"/>
+    <line x1="28" y1="15" x2="21" y2="27" stroke="#bda260" stroke-width="0.9"/>
+    <line x1="28" y1="15" x2="25" y2="27" stroke="#bda260" stroke-width="0.9"/>
+    <line x1="28" y1="15" x2="31" y2="27" stroke="#bda260" stroke-width="0.9"/>
+    <line x1="28" y1="15" x2="35" y2="27" stroke="#bda260" stroke-width="0.9"/>
+    <line x1="28" y1="15" x2="39" y2="27" stroke="#bda260" stroke-width="0.9"/>
+
+    <!-- Viga delantera de parachoques (rojo ferroviario histórico) -->
+    <rect x="10" y="27" width="36" height="5" rx="1" fill="#9e281b" stroke="#52130c" stroke-width="0.7"/>
+    <!-- Pernos de la viga -->
+    <circle cx="13" cy="29.5" r="1" fill="#240704"/>
+    <circle cx="43" cy="29.5" r="1" fill="#240704"/>
+    <!-- Enganche central -->
+    <rect x="26" y="25" width="4" height="4" rx="0.8" fill="#111" stroke="#d4ab50" stroke-width="0.6"/>
+
+    <!-- Gran farol delantero (headlamp de aceite con aro dorado) -->
+    <rect x="24.5" y="22" width="7" height="6.5" rx="1.5" fill="#1e1c18" stroke="#cca13b" stroke-width="0.9"/>
+    <ellipse cx="28" cy="23.5" rx="2.4" ry="1.4" fill="#fff9d6"/>
+    <circle cx="28" cy="23.5" r="1.2" fill="#fff"/>
+
+    <!-- ==================== CALDERA Y CAJA DE HUMO ==================== -->
+    <!-- Cuerpo principal de la caldera -->
+    <rect x="16" y="32" width="24" height="48" rx="5" fill="url(#boilerGrad)" stroke="#0c1411" stroke-width="0.8"/>
+    <!-- Caja de humo delantera -->
+    <path d="M16,44 L16,35 C16,32.5 19,30 28,30 C37,30 40,32.5 40,35 L40,44 Z" fill="url(#smokeboxGrad)" stroke="#0c1411" stroke-width="0.7"/>
+
+    <!-- Cinchos de latón de la caldera (boiler bands) -->
+    <rect x="16" y="47" width="24" height="1.6" fill="url(#brassBand)"/>
+    <rect x="16" y="56" width="24" height="1.6" fill="url(#brassBand)"/>
+    <rect x="16" y="65" width="24" height="1.6" fill="url(#brassBand)"/>
+    <rect x="16" y="74" width="24" height="1.6" fill="url(#brassBand)"/>
+
+    <!-- Tuberías de vapor de latón a los costados -->
+    <line x1="16.5" y1="42" x2="16.5" y2="78" stroke="#cca13b" stroke-width="0.8"/>
+    <line x1="39.5" y1="42" x2="39.5" y2="78" stroke="#cca13b" stroke-width="0.8"/>
+
+    <!-- Chimenea con labio de latón -->
+    <circle cx="28" cy="38" r="4.8" fill="#121615" stroke="#262d2b" stroke-width="1"/>
+    <circle cx="28" cy="38" r="4.2" fill="none" stroke="#cca13b" stroke-width="0.7"/>
+    <circle cx="28" cy="38" r="2.8" fill="#080909"/>
+    <!-- Penacho sutil de vapor saliendo de la chimenea -->
+    <circle cx="28" cy="41" r="3.2" fill="#ffffff" opacity="0.32"/>
+    <circle cx="27" cy="45" r="4.2" fill="#ffffff" opacity="0.22"/>
+    <circle cx="29" cy="49" r="5.2" fill="#ffffff" opacity="0.12"/>
+
+    <!-- Domo de arena delantero (sand dome) -->
+    <circle cx="28" cy="52" r="3.6" fill="url(#brassShine)" stroke="#66440c" stroke-width="0.6"/>
+
+    <!-- Campana de bronce central con soporte -->
+    <ellipse cx="28" cy="61" rx="2" ry="1.6" fill="#cca13b" stroke="#4a3106" stroke-width="0.5"/>
+    <rect x="27.2" y="60" width="1.6" height="2" fill="#52380a"/>
+
+    <!-- Domo principal de vapor trasero (steam dome) con válvulas de seguridad -->
+    <circle cx="28" cy="70" r="4.3" fill="url(#brassShine)" stroke="#66440c" stroke-width="0.7"/>
+    <circle cx="25.8" cy="70" r="0.8" fill="#fff" opacity="0.6"/>
+    <!-- Válvulas de seguridad dobles -->
+    <circle cx="26.5" cy="76" r="1.1" fill="url(#brassShine)"/>
+    <circle cx="29.5" cy="76" r="1.1" fill="url(#brassShine)"/>
+
+    <!-- ==================== CABINA DEL MAQUINISTA ==================== -->
+    <!-- Base y paredes de la cabina -->
+    <rect x="12" y="79" width="32" height="22" rx="2" fill="#18241f" stroke="#0a100d" stroke-width="0.8"/>
+    <!-- Ventanas frontales de la cabina -->
+    <rect x="15" y="80" width="6" height="2.2" rx="0.5" fill="#bee0db" stroke="#2d3d37" stroke-width="0.5"/>
+    <rect x="35" y="80" width="6" height="2.2" rx="0.5" fill="#bee0db" stroke="#2d3d37" stroke-width="0.5"/>
+    <!-- Techo arqueado de la cabina -->
+    <rect x="13.5" y="82" width="29" height="18" rx="3.5" fill="url(#cabRoof)" stroke="#222926" stroke-width="0.7"/>
+    <!-- Nervadura / claraboya de ventilación en el techo -->
+    <rect x="25" y="84" width="6" height="14" rx="1.5" fill="#1b211f" stroke="#5a6962" stroke-width="0.5"/>
+    <line x1="28" y1="85" x2="28" y2="97" stroke="#7e9188" stroke-width="0.6"/>
+
+    <!-- ==================== ARTICULACIÓN / PASARELA DE TÉNDER ==================== -->
+    <rect x="19" y="100" width="14" height="4.5" fill="#141716" stroke="#2c3330" stroke-width="0.6"/>
+    <line x1="22" y1="102" x2="34" y2="102" stroke="#cca13b" stroke-width="0.7"/>
+
+    <!-- ==================== TÉNDER DE CARBÓN Y AGUA ==================== -->
+    <!-- Chasis del ténder -->
+    <rect x="13" y="104" width="30" height="34" rx="2.5" fill="#141c19" stroke="#0b110e" stroke-width="0.8"/>
+
+    <!-- Carbonera delantera con bordes angulados -->
+    <path d="M14.5,105.5 L41.5,105.5 L39.5,123 L16.5,123 Z" fill="#121413" stroke="#222826" stroke-width="0.6"/>
+    <!-- Trozos individuales de carbón brillante -->
+    <polygon points="17,107 22,106 20,111 16,110" fill="#292c2b"/>
+    <polygon points="22,106 28,107 26,112 21,111" fill="#181a19"/>
+    <polygon points="28,107 35,106 33,111 27,112" fill="#303533"/>
+    <polygon points="34,106 40,108 38,112 33,111" fill="#1f2221"/>
+    <polygon points="18,111 24,111 22,117 17,115" fill="#383d3b"/>
+    <polygon points="24,111 31,112 29,118 23,117" fill="#1c1f1e"/>
+    <polygon points="31,112 37,111 36,117 30,118" fill="#2d3130"/>
+    <polygon points="19,116 26,117 24,122 18,121" fill="#1f2221"/>
+    <polygon points="26,117 33,117 31,122 25,122" fill="#393f3c"/>
+    <polygon points="33,117 38,116 37,121 32,122" fill="#1a1c1b"/>
+    <!-- Destellos brillantes de antracita -->
+    <circle cx="21" cy="109" r="0.6" fill="#88918d"/>
+    <circle cx="33" cy="110" r="0.7" fill="#88918d"/>
+    <circle cx="27" cy="115" r="0.8" fill="#b0bbb6"/>
+    <circle cx="23" cy="120" r="0.6" fill="#88918d"/>
+
+    <!-- Tanque de agua trasero del ténder -->
+    <rect x="14.5" y="122.5" width="27" height="14" rx="1.5" fill="url(#tenderTank)" stroke="#0e1713" stroke-width="0.7"/>
+    <!-- Filetes decorativos de pintura dorada del ténder -->
+    <rect x="16" y="124" width="24" height="11" rx="1" fill="none" stroke="#cca13b" stroke-width="0.6" stroke-opacity="0.8"/>
+
+    <!-- Boca redonda de llenado de agua con volante central -->
+    <circle cx="28" cy="129.5" r="3.2" fill="#1a2420" stroke="#cca13b" stroke-width="0.8"/>
+    <circle cx="28" cy="129.5" r="1.3" fill="#cca13b"/>
+
+    <!-- Parachoques y enganche trasero -->
+    <rect x="13" y="136.5" width="30" height="3" rx="0.8" fill="#9e281b" stroke="#52130c" stroke-width="0.6"/>
+    <rect x="26.5" y="138" width="3" height="3" rx="0.6" fill="#111" stroke="#888" stroke-width="0.5"/>
+  </g>
+</svg>

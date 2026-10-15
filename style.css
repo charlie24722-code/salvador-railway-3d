@@ -7,12 +7,34 @@
 .route-position{display:flex;gap:10px;align-items:center;font-size:10px}.route-position label{font-weight:bold}.route-position output{color:#256b80;font-variant-numeric:tabular-nums}.route-position button{margin-left:auto;padding:4px 0;color:#256b80;font-size:10px}
 #routeProgress{accent-color:#256b80;margin:9px 0 10px;height:10px}
 .route-stop{display:flex;gap:10px;align-items:center;font-size:9px;min-height:26px}.route-stop select{font:inherit;max-width:48%;padding:5px;border:1px solid #c3cec0;background:#f7f6ec;color:var(--ink);border-radius:3px}.route-stop span{color:#6b795f;line-height:1.5}
-.route-point{width:22px;height:22px;background:#20718d;border:3px solid #fff9e7;border-radius:50%;box-shadow:0 0 0 5px #20718d30,0 2px 7px #163e4350;pointer-events:none}.route-point:after{content:'';position:absolute;inset:5px;background:#fff9e7;border-radius:50%}
-.line-key .uncertain{border-top:2px dotted #97516b}.map-bottom{bottom:330px}.notice{bottom:345px}.detail{max-height:calc(100% - 390px)}.profile-collapsed .map-bottom{bottom:235px}.profile-collapsed .notice{bottom:245px}
+.line-key .uncertain{border-top:2px dotted #97516b}
+.map-bottom{bottom:350px}.notice{bottom:365px}.detail{max-height:calc(100% - 410px)}.profile-collapsed .map-bottom{bottom:250px}.profile-collapsed .notice{bottom:260px}
+
+/* Ocultar y restaurar el panel de itinerario */
+.profile-close-btn{width:26px;height:26px;border-radius:3px;border:1px solid #c2ccb9;background:#f0eee2;color:#4a5c51;font-size:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;cursor:pointer;transition:all .15s}
+.profile-close-btn:hover{background:#e2decb;color:var(--ink)}
+.profile-hidden #profile{display:none!important}
+.profile-hidden .map-bottom{bottom:20px!important}
+.profile-hidden .notice{bottom:30px!important}
+.profile-hidden .detail{max-height:calc(100% - 130px)!important}
+.profile-restore-pill{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:4;background:#f8f6eef5;color:var(--ink);border:1px solid #b5c2ab;border-radius:24px;padding:8px 18px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(22,63,39,.22);backdrop-filter:blur(8px);cursor:pointer;transition:transform .2s,box-shadow .2s,background .15s}
+.profile-restore-pill:hover{background:#fff;transform:translateX(-50%) translateY(-2px);box-shadow:0 6px 22px rgba(22,63,39,.3)}
+.profile-restore-pill .pill-icon{font-size:14px}
+.profile-restore-pill .pill-arrow{font-size:9px;color:#6a7f69}
+
+/* Locomotora y tren auténticos (sin cajas translúcidas) */
+.route-point{width:28px;height:72px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;pointer-events:none}
+.route-point:after{display:none!important}
+.route-point img{width:28px;height:72px;display:block;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(10,18,14,.55))}
+
+.train-controls{display:flex;align-items:center;gap:16px;font-size:9px;margin-top:7px;color:#5c7369}
+.train-controls label{display:flex;align-items:center;gap:5px}
+.train-controls input{accent-color:#256b80}
+.train-controls select{font:inherit;background:#f7f6ec;color:var(--ink);border:1px solid #c3cec0;border-radius:3px;padding:3px}
+.train-controls span{margin-left:auto;font-variant-numeric:tabular-nums}
+
 @media(max-width:1000px){.legend{display:none}.route-stop{font-size:8px}.route-position{font-size:9px;gap:7px}.route-position button{font-size:9px}}
-@media(max-width:680px){.detail{max-height:calc(100% - 390px)}.route-position{font-size:9px}.route-stop span{max-width:52%}.profile{padding:9px}.profile-collapsed .map-bottom{bottom:230px}}
+@media(max-width:680px){.train-controls{gap:8px;font-size:8px}.detail{max-height:calc(100% - 410px)}.route-position{font-size:9px}.route-stop span{max-width:52%}.profile{padding:9px}.profile-collapsed .map-bottom{bottom:230px}}
 
-.train-controls{display:flex;align-items:center;gap:16px;font-size:9px;margin-top:7px;color:#5c7369}.train-controls label{display:flex;align-items:center;gap:5px}.train-controls input{accent-color:#256b80}.train-controls select{font:inherit;background:#f7f6ec;color:var(--ink);border:1px solid #c3cec0;border-radius:3px;padding:3px}.train-controls span{margin-left:auto;font-variant-numeric:tabular-nums}.route-point{width:30px;height:52px;background:#20718d30;border:0;border-radius:8px;box-shadow:0 1px 5px #153d4455}.route-point:after{display:none}.route-point img{width:30px;height:52px;display:block;filter:drop-shadow(0 1px 1px #fff7df)}.map-bottom{bottom:360px}.detail{max-height:calc(100% - 420px)}.notice{bottom:370px}.profile-collapsed .map-bottom{bottom:265px}.profile-collapsed .notice{bottom:275px}@media(max-width:680px){.train-controls{gap:8px;font-size:8px}.detail{max-height:calc(100% - 420px)}}
-
-/* Mantener todos los controles accesibles por encima del perfil. */
+/* Mantener todos los controles accesibles por encima del perfil */
 .map-tools{top:83px;right:55px;display:grid;grid-template-columns:repeat(3,32px);gap:3px}
