@@ -1,32 +1,358 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Salvador Railway · Atlas del relieve</title><meta name="description" content="Explorador 3D del relieve real del corredor del Salvador Railway y su mapa de 1911."><link rel="icon" href="assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="vendor/maplibre-gl.css"><link rel="stylesheet" href="style.css?v=8"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salvador Railway · Atlas del relieve (1911)</title>
+  <meta name="description" content="Explorador 3D histórico y geográfico del corredor del Salvador Railway y su mapa de 1911 sobre el relieve real de El Salvador.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css?v=9">
+</head>
 <body>
-<header class="masthead"><div class="brand"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M3 27 13 7 23 27M15 27 24 12 33 27M3 30h30M10 24h17"/></svg><div><span class="eyebrow">ATLAS HISTÓRICO · EL SALVADOR</span><h1>Salvador Railway<span> / 1911</span></h1></div></div><nav aria-label="Herramientas principales"><button id="originalButton">▧ <span>Mapa original</span></button><button id="sourcesButton">↗ <span>Fuentes y método</span></button><button id="helpButton" aria-label="Ayuda de navegación">?</button></nav></header>
-<main><aside class="sidebar" id="sidebar"><div class="intro"><span class="eyebrow accent">TERRITORIO, RIELES Y VOLCANES</span><h2>Una geografía<br>que explica el viaje.</h2><p>Explora el corredor de Acajutla a San Salvador y sus ramales sobre el relieve real del país.</p></div>
-<div class="tabs" role="tablist" aria-label="Panel de exploración"><button id="tab-explore" role="tab" aria-controls="explorePanel" aria-selected="true">Explorar</button><button id="tab-layers" role="tab" aria-controls="layersPanel" aria-selected="false">Capas</button></div>
-<section id="explorePanel" role="tabpanel" aria-labelledby="tab-explore"><label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5"/><path d="m12 12 5 5"/></svg><input id="search" type="search" placeholder="Buscar ciudad, estación o relieve…" aria-label="Buscar lugar"></label>
-<div class="section-label"><span>ITINERARIOS</span><span class="tiny">3 ramales</span></div><div class="routes" id="routes"></div>
-<div class="section-label"><span>MIRADORES DEL RELIEVE</span><span class="tiny">Volar a</span></div><div class="viewpoints" id="viewpoints"></div>
-<div class="section-label"><span>LUGARES DEL MAPA</span><span id="placeCount" class="tiny"></span></div><div class="filters" aria-label="Filtrar lugares"><button data-filter="all" class="active" aria-pressed="true">Todos</button><button data-filter="station" aria-pressed="false">Estaciones</button><button data-filter="natural" aria-pressed="false">Relieve</button><button data-filter="historic-city" aria-pressed="false">Ciudades 1911</button><button data-filter="place" aria-pressed="false">Actuales</button></div><div id="placeList" class="place-list"></div>
-</section>
-<section id="layersPanel" role="tabpanel" aria-labelledby="tab-layers" hidden><div class="section-label"><span>BASE CARTOGRÁFICA</span></div><div class="base-options" id="baseOptions"><button data-base="relief" class="active" aria-pressed="true"><i class="swatch relief"></i>Relieve</button><button data-base="satellite" aria-pressed="false"><i class="swatch satellite"></i>Satélite</button><button data-base="street" aria-pressed="false"><i class="swatch street"></i>Calles</button></div><p class="small">El relieve está guardado localmente. Satélite y calles requieren conexión; son cartografía moderna.</p>
-<div class="section-label"><span>INFORMACIÓN SOBRE EL TERRENO</span></div><div id="layerToggles"></div>
-<div class="section-label"><span>FORMA DEL RELIEVE</span></div><label class="range-label" for="exaggeration">Exageración vertical <output id="exaggerationValue">1,5×</output></label><input id="exaggeration" type="range" min="1" max="3" step="0.1" value="1.5"><p class="small">1× conserva la proporción vertical real. El perfil y las elevaciones siempre usan metros sin exagerar.</p><label class="range-label" for="pitch">Inclinación <output id="pitchValue">58°</output></label><input id="pitch" type="range" min="0" max="80" value="58"><label class="range-label" for="quality">Resolución de dibujo <output id="qualityValue">1,50×</output></label><input id="quality" type="range" min="0.75" max="2" step="0.25" value="1.5"><p class="small">Alta calidad en reposo: 1,5× y bordes suavizados; hasta 2×. Durante el movimiento se ajusta automáticamente a 1× para mantener la fluidez. El terreno conserva sus datos originales.</p><p class="small" id="navigationStats" aria-live="off">Navegación: pendiente de medir.</p><button id="countryButton" class="wide secondary">Ver todo El Salvador ↗</button></section>
-<div class="sidebar-note"><i></i><p><strong>Lectura histórica, terreno moderno.</strong><br>Rutas y estaciones aproximadas. Consulta la precisión de cada lugar.</p></div>
-</aside>
-<section class="map-shell" aria-label="Visor cartográfico 3D"><div id="map" role="region" aria-label="Mapa 3D interactivo del Salvador Railway"></div>
-<div class="map-top"><div class="map-tag"><i></i><span id="mapMode">RELIEVE 3D</span><span class="sep">/</span> OCCIDENTE Y CENTRO</div><button id="toggleSidebar" class="icon-button" aria-expanded="true" aria-controls="sidebar" aria-label="Mostrar u ocultar panel">☰</button></div>
-<div class="map-title"><span>EL SALVADOR</span><p>Del Pacífico al valle interior</p></div>
-<div id="loading" class="loading" role="status"><span></span>Preparando el terreno…</div><div id="notice" class="notice" role="status" hidden></div>
-<div class="map-tools" aria-label="Controles del visor"><button id="resetView" title="Vista del corredor" aria-label="Restablecer vista">⌂</button><button id="view3d" class="active" title="Cambiar entre 2D y 3D" aria-pressed="true">3D</button><button id="orbit" title="Orbitar alrededor del centro" aria-label="Orbitar" aria-pressed="false">⟳</button><button id="measure" title="Medir una distancia" aria-label="Medir una distancia" aria-pressed="false">↔</button><button id="snapshot" title="Guardar vista PNG" aria-label="Guardar captura PNG">↓</button><button id="fullscreen" title="Pantalla completa" aria-label="Pantalla completa">⛶</button></div>
-<div class="map-bottom"><div class="legend"><span class="section-label">ELEVACIÓN · m s. n. m.</span><div class="elevation-ramp"></div><div class="legend-values"><span>0</span><span>500</span><span>1.000</span><span>1.500</span><span>2.400</span></div><div class="line-key"><i class="rail"></i>Itinerario histórico aproximado</div><div class="line-key"><i class="river"></i>Hidrografía moderna OSM</div><div class="line-key"><i class="border"></i>Contorno terrestre · Natural Earth</div><div class="line-key"><i class="uncertain"></i>Conexión sin confirmar</div><div class="line-key">○ Estación sobre corredor (aprox.)</div><div class="line-key">● Ciudad / puerto · referencia de localidad</div></div><div class="coordinate-bar"><span id="coordinates">13,80° N · 89,48° O</span><span id="elevation">Elevación: mueve el cursor</span></div></div>
-<article id="detail" class="detail" hidden aria-live="polite"><button id="closeDetail" class="close" aria-label="Cerrar ficha">×</button><span id="detailKind" class="eyebrow accent"></span><h2 id="detailTitle"></h2><div id="detailElevation" class="detail-metric"></div><p id="detailText"></p><div id="detailPrecision" class="precision"></div><button id="detailStation" class="wide secondary" hidden></button><a id="detailSource" target="_blank" rel="noreferrer">Consultar fuente ↗</a><button id="detailFly" class="wide secondary">Acercar al lugar ↗</button></article>
-<section id="profile" class="profile" aria-label="Perfil de elevación del itinerario"><div class="profile-header"><div><span class="eyebrow">PERFIL DEL TERRENO MODERNO</span><h3 id="profileTitle">Acajutla → San Salvador</h3></div><div class="profile-actions"><button id="tourButton" class="primary">▷ Recorrer ruta</button><button id="collapseProfile" aria-expanded="true" aria-label="Plegar gráfico de elevación" title="Plegar gráfico de elevación">⌄</button><button id="closeProfile" class="profile-close-btn" aria-label="Ocultar panel del itinerario" title="Ocultar panel del mapa">✕</button></div></div><div class="route-inspector" aria-label="Localizar un punto del recorrido"><div class="route-position"><label for="routeProgress">Tren del recorrido</label><output id="routePosition" for="routeProgress">0 km</output><button id="centerRoutePoint" title="Acercar al punto del recorrido">Centrar punto ↗</button></div><input id="routeProgress" type="range" min="0" max="1000" step="1" value="0" aria-label="Avance del tren por la ruta"><div class="route-stop"><select id="routeStop" aria-label="Ir a una parada del recorrido"></select><span id="routeSegment"></span></div></div><div class="train-controls"><label><input id="followTrain" type="checkbox" checked> Seguir al tren</label><label>Velocidad <select id="trainSpeed" aria-label="Velocidad visual del tren"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label><span id="trainStatus">Tren detenido</span></div><div id="profileBody"><div class="profile-meta"><span id="profileDistance"></span><span id="profileRange"></span><span>DEM · sin exageración</span></div><div id="profileChart" class="chart" tabindex="0" aria-label="Perfil de elevación; pulsa para mover el punto del recorrido"></div><div class="profile-footer"><span id="profileReadout">Mueve el punto con la barra o pulsa sobre una vía.</span><button id="exportRoute">Descargar GeoJSON ↗</button></div></div></section><button id="restoreProfile" class="profile-restore-pill" hidden aria-label="Mostrar panel de itinerario y tren"><span class="pill-icon">🚂</span><span>Itinerario y tren</span><span class="pill-arrow">▲</span></button>
-</section></main>
-<dialog id="originalDialog" class="original-dialog"><div class="dialog-heading"><div><span class="eyebrow accent">FUENTE PRIMARIA · 1911</span><h2>El mapa que inició el viaje.</h2></div><button class="close-dialog" aria-label="Cerrar mapa original">×</button></div><p>Salvador Railway, en Percy F. Martin, <em>Salvador of the Twentieth Century</em>, lámina frente a la p. 198. Amplía para leer sus estaciones y topónimos.</p><div class="original-tools"><button id="imageOut" aria-label="Alejar mapa original">−</button><output id="imageZoom">100%</output><button id="imageIn" aria-label="Acercar mapa original">+</button><a href="assets/mapa-martin-1911.jpg" download>Descargar original ↗</a></div><div class="original-scroll"><img id="originalImage" src="assets/mapa-martin-1911.jpg" alt="Mapa histórico del Salvador Railway con sus estaciones, ríos, volcanes y poblados, 1911"></div><p class="small">La lámina no tiene una georreferenciación comprobada. Se conserva completa como documento de consulta, sin forzar sus distancias sobre el terreno moderno.</p></dialog>
-<dialog id="captureDialog" class="original-dialog"><div class="dialog-heading"><h2>Captura del recorrido</h2><button class="close-dialog" aria-label="Cerrar captura">×</button></div><img id="capturePreview" alt="Captura del relieve, las vías y la locomotora" style="display:block;width:100%;max-height:68vh;object-fit:contain"><p><a id="captureDownload" download="salvador-railway-vista.png">Descargar captura PNG ↗</a></p></dialog>
-<dialog id="sourcesDialog"><div class="dialog-heading"><div><span class="eyebrow accent">TRAZABILIDAD Y PRECISIÓN</span><h2>De dónde viene este territorio.</h2></div><button class="close-dialog" aria-label="Cerrar fuentes">×</button></div><div id="sourcesContent"></div></dialog>
-<dialog id="helpDialog"><div class="dialog-heading"><h2>Explora a tu ritmo.</h2><button class="close-dialog" aria-label="Cerrar ayuda">×</button></div><dl class="help-list"><dt>Mover</dt><dd>Arrastra con el botón izquierdo o con un dedo.</dd><dt>Acercar / alejar</dt><dd>Rueda del ratón, gesto con dos dedos o botones + y −.</dd><dt>Girar e inclinar</dt><dd>Botón derecho y arrastrar; en pantalla táctil, gira o desplaza dos dedos. También puedes usar los controles del panel Capas.</dd><dt>Consultar</dt><dd>Selecciona una estación o un accidente geográfico en el mapa o en la lista.</dd><dt>Teclado</dt><dd>Con el mapa enfocado: flechas para mover; + y − para zoom; Shift + flechas para girar e inclinar. Esc cierra las ventanas.</dd><dt>Medir</dt><dd>Activa ↔ y marca dos puntos. Se mide distancia horizontal geodésica, no longitud de rieles ni distancia sobre la ladera.</dd><dt>Tren del recorrido</dt><dd>Mueve la barra, elige una parada o pulsa sobre una vía. La locomotora permanece visible; «Centrar punto» acerca la cámara. Los círculos de ciudad indican la localidad y los puntos de estación se ubican sobre el corredor aproximado.</dd><dt>Recorrer</dt><dd>La locomotora avanza continuamente por el itinerario aproximado. Pausa y reanuda con «Recorrer ruta», regula la velocidad o desactiva «Seguir al tren» para explorar el terreno. Al mover manualmente el mapa, se desactiva el seguimiento. La velocidad es de exploración y no reproduce una marcha histórica.</dd></dl><p class="precision">Las curvas cada 100 m y las consultas de elevación son derivadas del DEM. La altura del suelo bajo un marcador no es necesariamente la cota de una cumbre ni del edificio histórico.</p></dialog>
-<noscript>Este visor necesita JavaScript y un navegador con WebGL. El mapa original está en assets/mapa-martin-1911.jpg.</noscript><script src="vendor/maplibre-gl.js"></script><script src="route-geometry.js?v=8"></script><script src="app.js?v=8" defer></script>
-</body></html>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="brand-badge" aria-hidden="true">
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <path d="M3 27 13 7 23 27M15 27 24 12 33 27M3 30h30M10 24h17"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <span class="eyebrow">ATLAS HISTÓRICO · EL SALVADOR</span>
+      <h1>Salvador Railway<span> / 1911</span></h1>
+    </div>
+  </div>
+  <nav aria-label="Herramientas principales">
+    <button id="originalButton" class="nav-btn" title="Consultar mapa original de 1911">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Mapa original</span>
+    </button>
+    <button id="sourcesButton" class="nav-btn" title="Ver fuentes y metodología académica">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Fuentes y método</span>
+    </button>
+    <button id="helpButton" class="nav-btn help-btn" aria-label="Ayuda de navegación y atajos">?</button>
+  </nav>
+</header>
+
+<main>
+  <aside class="sidebar" id="sidebar">
+    <div class="intro">
+      <span class="eyebrow accent">TERRITORIO, RIELES Y VOLCANES</span>
+      <h2>Una geografía<br>que explica el viaje.</h2>
+      <p>Explora el corredor de Acajutla a San Salvador y sus ramales sobre el relieve real del país.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Panel de exploración">
+      <button id="tab-explore" role="tab" aria-controls="explorePanel" aria-selected="true">Explorar</button>
+      <button id="tab-layers" role="tab" aria-controls="layersPanel" aria-selected="false">Capas</button>
+    </div>
+
+    <section id="explorePanel" role="tabpanel" aria-labelledby="tab-explore">
+      <label class="search">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5"/><path d="m12 12 5 5"/></svg>
+        <input id="search" type="search" placeholder="Buscar ciudad, estación o relieve…" aria-label="Buscar lugar">
+      </label>
+
+      <div class="section-label">
+        <span>ITINERARIOS</span>
+        <span class="tiny badge-chip">3 ramales</span>
+      </div>
+      <div class="routes" id="routes"></div>
+
+      <div class="section-label">
+        <span>MIRADORES DEL RELIEVE</span>
+        <span class="tiny">Volar a</span>
+      </div>
+      <div class="viewpoints" id="viewpoints"></div>
+
+      <div class="section-label">
+        <span>LUGARES DEL MAPA</span>
+        <span id="placeCount" class="tiny badge-chip"></span>
+      </div>
+      <div class="filters" aria-label="Filtrar lugares">
+        <button data-filter="all" class="active" aria-pressed="true">Todos</button>
+        <button data-filter="station" aria-pressed="false">Estaciones</button>
+        <button data-filter="natural" aria-pressed="false">Relieve</button>
+        <button data-filter="historic-city" aria-pressed="false">Ciudades 1911</button>
+        <button data-filter="place" aria-pressed="false">Actuales</button>
+      </div>
+      <div id="placeList" class="place-list"></div>
+    </section>
+
+    <section id="layersPanel" role="tabpanel" aria-labelledby="tab-layers" hidden>
+      <div class="section-label"><span>BASE CARTOGRÁFICA</span></div>
+      <div class="base-options" id="baseOptions">
+        <button data-base="relief" class="active" aria-pressed="true"><i class="swatch relief"></i>Relieve</button>
+        <button data-base="satellite" aria-pressed="false"><i class="swatch satellite"></i>Satélite</button>
+        <button data-base="street" aria-pressed="false"><i class="swatch street"></i>Calles</button>
+      </div>
+      <p class="small">El relieve está guardado localmente. Satélite y calles requieren conexión; son cartografía moderna.</p>
+
+      <div class="section-label"><span>INFORMACIÓN SOBRE EL TERRENO</span></div>
+      <div id="layerToggles" class="layer-toggles"></div>
+
+      <div class="section-label"><span>SIMBOLOGÍA Y ELEVACIÓN</span></div>
+      <div class="sidebar-legend">
+        <div class="elevation-ramp"></div>
+        <div class="legend-values"><span>0 m</span><span>500 m</span><span>1.000 m</span><span>1.500 m</span><span>2.400 m</span></div>
+        <div class="legend-keys">
+          <div class="line-key"><i class="rail"></i><span>Itinerario histórico</span></div>
+          <div class="line-key"><i class="river"></i><span>Hidrografía OSM</span></div>
+          <div class="line-key"><i class="border"></i><span>Límites y costa</span></div>
+          <div class="line-key"><i class="uncertain"></i><span>Conexión sin confirmar</span></div>
+          <div class="line-key"><span class="dot-station">○</span><span>18 estaciones del trazado</span></div>
+          <div class="line-key"><span class="dot-city">●</span><span>29 ciudades y puertos de 1911</span></div>
+        </div>
+      </div>
+
+      <div class="section-label"><span>FORMA DEL RELIEVE</span></div>
+      <label class="range-label" for="exaggeration">Exageración vertical <output id="exaggerationValue">1,5×</output></label>
+      <input id="exaggeration" type="range" min="1" max="3" step="0.1" value="1.5">
+      <p class="small">1× conserva la proporción vertical real. El perfil y las elevaciones siempre usan metros sin exagerar.</p>
+
+      <label class="range-label" for="pitch">Inclinación <output id="pitchValue">58°</output></label>
+      <input id="pitch" type="range" min="0" max="80" value="58">
+
+      <label class="range-label" for="quality">Resolución de dibujo <output id="qualityValue">1,50×</output></label>
+      <input id="quality" type="range" min="0.75" max="2" step="0.25" value="1.5">
+      <p class="small">Alta calidad en reposo: 1,5× y bordes suavizados; hasta 2×. Durante el movimiento se ajusta automáticamente a 1× para mantener la fluidez. El terreno conserva sus datos originales.</p>
+
+      <p class="small" id="navigationStats" aria-live="off">Navegación: pendiente de medir.</p>
+      <button id="countryButton" class="wide secondary">Ver todo El Salvador ↗</button>
+    </section>
+
+    <div class="sidebar-note">
+      <i></i>
+      <p><strong>Lectura histórica, terreno moderno.</strong><br>Rutas y estaciones aproximadas. Consulta la precisión de cada lugar.</p>
+    </div>
+  </aside>
+
+  <section class="map-shell" aria-label="Visor cartográfico 3D">
+    <div id="map" role="region" aria-label="Mapa 3D interactivo del Salvador Railway"></div>
+
+    <div class="map-top">
+      <div class="map-tag">
+        <span class="live-pulse"></span>
+        <span id="mapMode">RELIEVE 3D</span>
+        <span class="sep">/</span>
+        <span class="region-text">OCCIDENTE Y CENTRO</span>
+      </div>
+
+      <div class="coordinate-bar">
+        <span id="coordinates">13,80° N · 89,48° O</span>
+        <span class="coord-dot">·</span>
+        <span id="elevation">Elevación: mueve el cursor</span>
+      </div>
+
+      <button id="toggleSidebar" class="icon-button" aria-expanded="true" aria-controls="sidebar" aria-label="Mostrar u ocultar panel lateral" title="Ocultar o desplegar panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="map-title">
+      <span>EL SALVADOR</span>
+      <p>Del Pacífico al valle interior</p>
+    </div>
+
+    <div class="legend" id="mapLegend">
+      <div class="legend-header">
+        <span class="section-label">ELEVACIÓN · m s. n. m.</span>
+      </div>
+      <div class="elevation-ramp"></div>
+      <div class="legend-values"><span>0</span><span>500</span><span>1.000</span><span>1.500</span><span>2.400</span></div>
+      <div class="legend-keys">
+        <div class="line-key"><i class="rail"></i><span>Itinerario histórico</span></div>
+        <div class="line-key"><i class="river"></i><span>Hidrografía OSM</span></div>
+        <div class="line-key"><i class="border"></i><span>Límites y costa</span></div>
+        <div class="line-key"><i class="uncertain"></i><span>Sin confirmar</span></div>
+        <div class="line-key"><span class="dot-station">○</span><span>Estación (18)</span></div>
+        <div class="line-key"><span class="dot-city">●</span><span>Ciudad / puerto (29)</span></div>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" role="status"><span></span>Preparando el terreno…</div>
+    <div id="notice" class="notice" role="status" hidden></div>
+
+    <div class="map-tools" aria-label="Controles del visor">
+      <button id="resetView" title="Restablecer vista del corredor" aria-label="Restablecer vista">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </button>
+      <button id="view3d" class="active" title="Cambiar entre 2D y 3D" aria-pressed="true">
+        <span class="badge-3d">3D</span>
+      </button>
+      <button id="orbit" title="Orbitar 360° alrededor del centro" aria-label="Orbitar vista" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      </button>
+      <button id="measure" title="Medir distancia horizontal" aria-label="Medir distancia" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 7l5 5-5 5M22 7l-5 5 5 5"/></svg>
+      </button>
+      <button id="snapshot" title="Guardar captura PNG de la vista" aria-label="Guardar captura PNG">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
+      <button id="fullscreen" title="Modo pantalla completa" aria-label="Pantalla completa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9M9 21 3 21 3 15M21 15 21 21 15 21M3 9 3 3 9 3"/></svg>
+      </button>
+    </div>
+
+    <article id="detail" class="detail" hidden aria-live="polite">
+      <button id="closeDetail" class="close" aria-label="Cerrar ficha">×</button>
+      <span id="detailKind" class="eyebrow accent"></span>
+      <h2 id="detailTitle"></h2>
+      <div id="detailElevation" class="detail-metric"></div>
+      <p id="detailText"></p>
+      <div id="detailPrecision" class="precision"></div>
+      <button id="detailStation" class="wide secondary" hidden></button>
+      <div class="detail-actions">
+        <a id="detailSource" target="_blank" rel="noreferrer" class="source-link">Consultar fuente ↗</a>
+        <button id="detailFly" class="wide secondary">Acercar al lugar ↗</button>
+      </div>
+    </article>
+
+    <section id="profile" class="profile" aria-label="Panel de elevación e itinerario">
+      <div class="profile-header">
+        <div class="profile-titles">
+          <span class="eyebrow">PERFIL DEL TERRENO HISTÓRICO</span>
+          <h3 id="profileTitle">Acajutla → San Salvador</h3>
+        </div>
+        <div class="profile-actions">
+          <button id="tourButton" class="primary play-btn" title="Iniciar o pausar marcha del tren 3D">▷ Recorrer ruta</button>
+          <button id="collapseProfile" class="icon-round-btn" aria-expanded="true" aria-label="Plegar gráfico de elevación" title="Plegar gráfico de elevación">⌄</button>
+          <button id="closeProfile" class="profile-close-btn" aria-label="Ocultar panel del itinerario" title="Ocultar panel del mapa">✕</button>
+        </div>
+      </div>
+
+      <div class="route-inspector" aria-label="Localizar un punto del recorrido">
+        <div class="route-position">
+          <label for="routeProgress">Avance del convoy</label>
+          <output id="routePosition" for="routeProgress" class="odometer">0 km</output>
+          <button id="centerRoutePoint" class="center-btn" title="Acercar cámara al tren 3D">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+            <span>Centrar en tren</span>
+          </button>
+        </div>
+
+        <div class="progress-wrap">
+          <input id="routeProgress" type="range" min="0" max="1000" step="1" value="0" aria-label="Avance del tren por la ruta">
+        </div>
+
+        <div class="route-stop-row">
+          <div class="stop-select-wrap">
+            <select id="routeStop" aria-label="Ir a una parada del recorrido"></select>
+          </div>
+          <span id="routeSegment" class="segment-indicator"></span>
+        </div>
+      </div>
+
+      <div class="train-controls">
+        <label class="toggle-switch">
+          <input id="followTrain" type="checkbox" checked>
+          <span class="switch-slider"></span>
+          <span class="switch-text">Seguir al tren</span>
+        </label>
+        <div class="speed-control">
+          <span>Velocidad</span>
+          <select id="trainSpeed" aria-label="Velocidad visual del tren">
+            <option value="0.5">0,5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="trainStatus">Tren detenido</span>
+        </div>
+      </div>
+
+      <div id="profileBody">
+        <div class="profile-meta">
+          <span id="profileDistance"></span>
+          <span id="profileRange"></span>
+          <span class="meta-tag">DEM · sin exageración</span>
+        </div>
+        <div id="profileChart" class="chart" tabindex="0" aria-label="Perfil de elevación; pulsa para mover el punto del recorrido"></div>
+        <div class="profile-footer">
+          <span id="profileReadout">Mueve el punto con la barra o pulsa sobre una vía.</span>
+          <button id="exportRoute" class="export-link">Descargar GeoJSON ↗</button>
+        </div>
+      </div>
+    </section>
+
+    <button id="restoreProfile" class="profile-restore-pill" hidden aria-label="Mostrar panel de itinerario y tren">
+      <span class="pill-icon">🚂</span>
+      <span>Itinerario y tren 3D</span>
+      <span class="pill-arrow">▲</span>
+    </button>
+  </section>
+</main>
+
+<dialog id="originalDialog" class="original-dialog">
+  <div class="dialog-heading">
+    <div>
+      <span class="eyebrow accent">FUENTE PRIMARIA · 1911</span>
+      <h2>El mapa que inició el viaje.</h2>
+    </div>
+    <button class="close-dialog" aria-label="Cerrar mapa original">×</button>
+  </div>
+  <p>Salvador Railway, en Percy F. Martin, <em>Salvador of the Twentieth Century</em>, lámina frente a la p. 198. Amplía para leer sus estaciones y topónimos.</p>
+  <div class="original-tools">
+    <button id="imageOut" aria-label="Alejar mapa original">−</button>
+    <output id="imageZoom">100%</output>
+    <button id="imageIn" aria-label="Acercar mapa original">+</button>
+    <a href="assets/mapa-martin-1911.jpg" download class="download-btn">Descargar original ↗</a>
+  </div>
+  <div class="original-scroll">
+    <img id="originalImage" src="assets/mapa-martin-1911.jpg" alt="Mapa histórico del Salvador Railway con sus estaciones, ríos, volcanes y poblados, 1911">
+  </div>
+  <p class="small">La lámina no tiene una georreferenciación comprobada. Se conserva completa como documento de consulta, sin forzar sus distancias sobre el terreno moderno.</p>
+</dialog>
+
+<dialog id="captureDialog" class="original-dialog">
+  <div class="dialog-heading">
+    <h2>Captura del recorrido</h2>
+    <button class="close-dialog" aria-label="Cerrar captura">×</button>
+  </div>
+  <img id="capturePreview" alt="Captura del relieve, las vías y la locomotora" style="display:block;width:100%;max-height:68vh;object-fit:contain">
+  <p><a id="captureDownload" download="salvador-railway-vista.png" class="download-btn">Descargar captura PNG ↗</a></p>
+</dialog>
+
+<dialog id="sourcesDialog">
+  <div class="dialog-heading">
+    <div>
+      <span class="eyebrow accent">TRAZABILIDAD Y PRECISIÓN</span>
+      <h2>De dónde viene este territorio.</h2>
+    </div>
+    <button class="close-dialog" aria-label="Cerrar fuentes">×</button>
+  </div>
+  <div id="sourcesContent"></div>
+</dialog>
+
+<dialog id="helpDialog">
+  <div class="dialog-heading">
+    <h2>Explora a tu ritmo.</h2>
+    <button class="close-dialog" aria-label="Cerrar ayuda">×</button>
+  </div>
+  <dl class="help-list">
+    <dt>Mover</dt><dd>Arrastra con el botón izquierdo o con un dedo.</dd>
+    <dt>Acercar / alejar</dt><dd>Rueda del ratón, gesto con dos dedos o botones + y −.</dd>
+    <dt>Girar e inclinar</dt><dd>Botón derecho y arrastrar; en pantalla táctil, gira o desplaza dos dedos. También puedes usar los controles del panel Capas.</dd>
+    <dt>Consultar</dt><dd>Selecciona una estación o un accidente geográfico en el mapa o en la lista.</dd>
+    <dt>Teclado</dt><dd>Con el mapa enfocado: flechas para mover; + y − para zoom; Shift + flechas para girar e inclinar. Esc cierra las ventanas.</dd>
+    <dt>Medir</dt><dd>Activa ↔ y marca dos puntos. Se mide distancia horizontal geodésica, no longitud de rieles ni distancia sobre la ladera.</dd>
+    <dt>Tren 3D</dt><dd>Mueve la barra, elige una parada o pulsa sobre una vía. La locomotora y convoy 3D permanecen visibles; «Centrar en tren» acerca la cámara en perspectiva isométrica.</dd>
+    <dt>Recorrer</dt><dd>La locomotora avanza continuamente por el itinerario aproximado. Pausa y reanuda con «Recorrer ruta», regula la velocidad o desactiva «Seguir al tren» para explorar el terreno. Al mover manualmente el mapa, se desactiva el seguimiento.</dd>
+  </dl>
+  <p class="precision">Las curvas cada 100 m y las consultas de elevación son derivadas del DEM. La altura del suelo bajo un marcador no es necesariamente la cota de una cumbre ni del edificio histórico.</p>
+</dialog>
+
+<noscript>Este visor necesita JavaScript y un navegador con WebGL. El mapa original está en assets/mapa-martin-1911.jpg.</noscript>
+<script src="vendor/maplibre-gl.js"></script>
+<script src="route-geometry.js?v=9"></script>
+<script src="app.js?v=9" defer></script>
+</body>
+</html>
